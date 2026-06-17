@@ -1,0 +1,14 @@
+{
+  "name": "@perizinan/shared",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
