@@ -1,7 +1,7 @@
 import type { Role } from "@perizinan/shared";
 import { and, eq, like, ne, or, sql } from "drizzle-orm";
 import { db } from "../../db/client";
-import { perizinan, users } from "../../db/schema";
+import { kamar, perizinan, users } from "../../db/schema";
 
 type UserValues = {
   name: string;
@@ -14,11 +14,34 @@ type UserValues = {
   waliTelepon: string | null;
 };
 
+// MariaDB has no LATERAL, so Drizzle's `with`-relation queries don't run here;
+// load the `kamar` relation via an explicit left join + manual mapping instead.
+function withKamar(row: {
+  users: typeof users.$inferSelect;
+  kamar: typeof kamar.$inferSelect | null;
+}) {
+  return { ...row.users, kamar: row.kamar };
+}
+
 export const usersRepo = {
-  findById: (id: number) =>
-    db.query.users.findFirst({ where: eq(users.id, id), with: { kamar: true } }),
-  findByUsername: (username: string) =>
-    db.query.users.findFirst({ where: eq(users.username, username), with: { kamar: true } }),
+  async findById(id: number) {
+    const [row] = await db
+      .select()
+      .from(users)
+      .leftJoin(kamar, eq(users.kamarId, kamar.id))
+      .where(eq(users.id, id))
+      .limit(1);
+    return row ? withKamar(row) : undefined;
+  },
+  async findByUsername(username: string) {
+    const [row] = await db
+      .select()
+      .from(users)
+      .leftJoin(kamar, eq(users.kamarId, kamar.id))
+      .where(eq(users.username, username))
+      .limit(1);
+    return row ? withKamar(row) : undefined;
+  },
   findByRole: (role: Role) => db.query.users.findMany({ where: eq(users.role, role) }),
   findMuaddibByKamar: (kamarId: number) =>
     db.query.users.findFirst({ where: and(eq(users.kamarId, kamarId), eq(users.role, "muaddib")) }),
@@ -43,14 +66,15 @@ export const usersRepo = {
     if (params.role) conds.push(eq(users.role, params.role));
     if (params.kamarId != null) conds.push(eq(users.kamarId, params.kamarId));
     const where = conds.length ? and(...conds) : undefined;
-    const items = await db.query.users.findMany({
-      where,
-      with: { kamar: true },
-      limit: params.limit,
-      offset: (params.page - 1) * params.limit,
-    });
+    const rows = await db
+      .select()
+      .from(users)
+      .leftJoin(kamar, eq(users.kamarId, kamar.id))
+      .where(where)
+      .limit(params.limit)
+      .offset((params.page - 1) * params.limit);
     const [{ total }] = await db.select({ total: sql<number>`count(*)` }).from(users).where(where);
-    return { items, total: Number(total) };
+    return { items: rows.map(withKamar), total: Number(total) };
   },
   create: (v: UserValues) => db.insert(users).values(v).$returningId(),
   update: (id: number, v: Partial<UserValues>) => db.update(users).set(v).where(eq(users.id, id)),

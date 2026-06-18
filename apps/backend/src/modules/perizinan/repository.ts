@@ -1,13 +1,38 @@
 import type { JenisIzin, PerizinanStatus, Role } from "@perizinan/shared";
 import { and, desc, eq, inArray, type SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/mysql-core";
 import { db } from "../../db/client";
-import { perizinan, users } from "../../db/schema";
+import { kamar, perizinan, users } from "../../db/schema";
 
-const withRelations = {
-  santri: { with: { kamar: true } },
-  muaddib: true,
-  mudir: true,
-} as const;
+// MariaDB has no LATERAL, so Drizzle's `with`-relation queries don't run here;
+// load santri (+kamar), muaddib, and mudir via explicit aliased joins + mapping.
+const santriT = alias(users, "santri");
+const muaddibT = alias(users, "muaddib");
+const mudirT = alias(users, "mudir");
+
+const relationalSelect = () =>
+  db
+    .select({ perizinan, santri: santriT, kamar, muaddib: muaddibT, mudir: mudirT })
+    .from(perizinan)
+    .innerJoin(santriT, eq(perizinan.userId, santriT.id))
+    .leftJoin(kamar, eq(santriT.kamarId, kamar.id))
+    .leftJoin(muaddibT, eq(perizinan.muaddibId, muaddibT.id))
+    .leftJoin(mudirT, eq(perizinan.mudirId, mudirT.id));
+
+function mapRelational(r: {
+  perizinan: typeof perizinan.$inferSelect;
+  santri: typeof users.$inferSelect;
+  kamar: typeof kamar.$inferSelect | null;
+  muaddib: typeof users.$inferSelect | null;
+  mudir: typeof users.$inferSelect | null;
+}) {
+  return {
+    ...r.perizinan,
+    santri: { ...r.santri, kamar: r.kamar },
+    muaddib: r.muaddib,
+    mudir: r.mudir,
+  };
+}
 
 const MUDIR_VISIBLE: PerizinanStatus[] = [
   "menunggu_mudir",
@@ -51,18 +76,18 @@ function buildWhere(actor: Scope, f: Filters): SQL | undefined {
 export const perizinanRepo = {
   async list(actor: Scope, f: Filters & { page: number; limit: number }) {
     const where = buildWhere(actor, f);
-    const items = await db.query.perizinan.findMany({
-      where,
-      with: withRelations,
-      orderBy: desc(perizinan.createdAt),
-      limit: f.limit,
-      offset: (f.page - 1) * f.limit,
-    });
-    const all = await db.query.perizinan.findMany({ where, columns: { id: true } });
-    return { items, total: all.length };
+    const rows = await relationalSelect()
+      .where(where)
+      .orderBy(desc(perizinan.createdAt))
+      .limit(f.limit)
+      .offset((f.page - 1) * f.limit);
+    const all = await db.select({ id: perizinan.id }).from(perizinan).where(where);
+    return { items: rows.map(mapRelational), total: all.length };
   },
-  findByIdWithRelations: (id: number) =>
-    db.query.perizinan.findFirst({ where: eq(perizinan.id, id), with: withRelations }),
+  async findByIdWithRelations(id: number) {
+    const [row] = await relationalSelect().where(eq(perizinan.id, id)).limit(1);
+    return row ? mapRelational(row) : undefined;
+  },
   findById: (id: number) => db.query.perizinan.findFirst({ where: eq(perizinan.id, id) }),
   delete: (id: number) => db.delete(perizinan).where(eq(perizinan.id, id)),
   create: async (values: typeof perizinan.$inferInsert) => {
