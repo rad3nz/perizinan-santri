@@ -1,8 +1,8 @@
-import { JENIS_IZIN, PERIZINAN_STATUS } from "@perizinan/shared";
 import { Elysia, t } from "elysia";
 import { envelope } from "../../lib/envelope";
 import { NotFoundError } from "../../lib/errors";
 import { pageParams } from "../../lib/pagination";
+import { jenisIzinSchema, statusSchema } from "../../lib/schema";
 import { wsRegistry } from "../../lib/ws-registry";
 import { authMacro } from "../../middleware/auth";
 import { notifRepo } from "../notifications/repository";
@@ -16,8 +16,6 @@ import { PerizinanService } from "./service";
 const notify = createNotificationService({ notifRepo, usersRepo, ws: wsRegistry });
 const service = new PerizinanService(perizinanRepo, usersRepo, notify);
 
-const jenisIzinSchema = t.Union(JENIS_IZIN.map((j) => t.Literal(j)));
-const statusSchema = t.Union(PERIZINAN_STATUS.map((s) => t.Literal(s)));
 const writeBody = t.Object({
   jenisIzin: jenisIzinSchema,
   tujuan: t.String({ minLength: 1, maxLength: 255 }),

@@ -1,11 +1,10 @@
-import { ROLES } from "@perizinan/shared";
 import { Elysia, t } from "elysia";
 import { envelope } from "../../lib/envelope";
 import { pageParams } from "../../lib/pagination";
+import { roleSchema } from "../../lib/schema";
 import { authMacro } from "../../middleware/auth";
 import { createUser, deleteUser, getUser, listUsers, updateUser } from "./service";
 
-const roleSchema = t.Union(ROLES.map((r) => t.Literal(r)));
 const baseFields = {
   name: t.String({ minLength: 1 }),
   username: t.String({ minLength: 3 }),
