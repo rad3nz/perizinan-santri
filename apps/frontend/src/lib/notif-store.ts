@@ -21,6 +21,7 @@ interface NotifState {
   items: NotificationItem[];
   unreadCount: number;
   onEvent: (evt: ServerEvent) => void;
+  setUnread: (count: number) => void;
   reset: () => void;
 }
 
@@ -42,5 +43,6 @@ export const useNotifStore = create<NotifState>((set) => ({
         break;
     }
   },
+  setUnread: (count) => set({ unreadCount: count }),
   reset: () => set({ items: [], unreadCount: 0 }),
 }));

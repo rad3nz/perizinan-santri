@@ -2,7 +2,7 @@ import { AppShell, Burger, Group, NavLink, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Outlet, NavLink as RouterNavLink } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
-import { roleHome } from "../lib/role-home";
+import { navItemsFor } from "../lib/nav";
 import { useNotificationSocket } from "../lib/ws";
 import { Header } from "./Header";
 
@@ -10,8 +10,7 @@ export function AppLayout() {
   const [opened, { toggle }] = useDisclosure();
   const { user } = useAuth();
   useNotificationSocket();
-  // Phase 11 expands this per-role nav; Phase 9 ships the Dashboard entry only.
-  const navItems = user ? [{ label: "Dashboard", to: roleHome(user.role) }] : [];
+  const navItems = user ? navItemsFor(user.role) : [];
 
   return (
     <AppShell

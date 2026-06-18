@@ -1,14 +1,13 @@
-import { ActionIcon, Avatar, Group, Indicator, Menu, Text } from "@mantine/core";
+import { Avatar, Group, Menu, Text } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useAuthStore } from "../auth/auth-store";
 import { useAuth } from "../auth/useAuth";
-import { useNotifStore } from "../lib/notif-store";
+import { NotificationBell } from "./NotificationBell";
 
 export function Header() {
   const { user } = useAuth();
   const clear = useAuthStore((s) => s.clear);
-  const unreadCount = useNotifStore((s) => s.unreadCount);
   const navigate = useNavigate();
 
   const logout = async () => {
@@ -19,11 +18,7 @@ export function Header() {
 
   return (
     <Group gap="md">
-      <Indicator label={unreadCount} size={16} color="red" disabled={unreadCount === 0}>
-        <ActionIcon variant="subtle" color="gray" aria-label="Notifikasi">
-          🔔
-        </ActionIcon>
-      </Indicator>
+      <NotificationBell />
       <Menu position="bottom-end" withArrow>
         <Menu.Target>
           <Group gap="xs" style={{ cursor: "pointer" }}>
