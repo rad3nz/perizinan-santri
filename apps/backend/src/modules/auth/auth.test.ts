@@ -55,3 +55,27 @@ test("GET /api/auth/me returns the current user", async () => {
 test("protected route without token -> 401", async () => {
   expect((await app.handle(new Request("http://localhost/api/auth/me"))).status).toBe(401);
 });
+
+const changePassword = (token: string, currentPassword: string, newPassword: string) =>
+  app.handle(
+    new Request("http://localhost/api/auth/password", {
+      method: "PATCH",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+  );
+
+test("PATCH /api/auth/password wrong current -> 422 Indonesian field error", async () => {
+  const token = (await (await login(U, "password")).json()).data.token;
+  const res = await changePassword(token, "salah", "newpass123");
+  expect(res.status).toBe(422);
+  expect((await res.json()).errors.currentPassword[0]).toBe("Password saat ini salah.");
+});
+
+test("PATCH /api/auth/password rotates the hash", async () => {
+  const token = (await (await login(U, "password")).json()).data.token;
+  const res = await changePassword(token, "password", "newpass123");
+  expect(res.status).toBe(200);
+  expect((await login(U, "password")).status).toBe(401);
+  expect((await login(U, "newpass123")).status).toBe(200);
+});

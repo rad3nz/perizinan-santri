@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { envelope } from "../../lib/envelope";
 import { authMacro } from "../../middleware/auth";
 import { toUserDTO } from "../users/dto";
-import { login } from "./service";
+import { changePassword, login } from "./service";
 
 export const authRoutes = new Elysia({ prefix: "/api/auth" })
   .use(authMacro)
@@ -20,4 +20,18 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     },
   )
   .post("/logout", () => envelope.ok(null, "Berhasil keluar."), { auth: [] })
-  .get("/me", ({ user }) => envelope.ok(toUserDTO(user)), { auth: [] });
+  .get("/me", ({ user }) => envelope.ok(toUserDTO(user)), { auth: [] })
+  .patch(
+    "/password",
+    async ({ user, body }) => {
+      await changePassword(user.id, body.currentPassword, body.newPassword);
+      return envelope.ok(null, "Kata sandi berhasil diubah.");
+    },
+    {
+      auth: [],
+      body: t.Object({
+        currentPassword: t.String({ minLength: 1 }),
+        newPassword: t.String({ minLength: 6 }),
+      }),
+    },
+  );
