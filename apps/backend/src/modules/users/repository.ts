@@ -20,6 +20,8 @@ export const usersRepo = {
   findByUsername: (username: string) =>
     db.query.users.findFirst({ where: eq(users.username, username), with: { kamar: true } }),
   findByRole: (role: Role) => db.query.users.findMany({ where: eq(users.role, role) }),
+  findMuaddibByKamar: (kamarId: number) =>
+    db.query.users.findFirst({ where: and(eq(users.kamarId, kamarId), eq(users.role, "muaddib")) }),
 
   async list(params: {
     page: number;
