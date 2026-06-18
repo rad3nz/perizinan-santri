@@ -3,14 +3,18 @@ import { Elysia, t } from "elysia";
 import { envelope } from "../../lib/envelope";
 import { NotFoundError } from "../../lib/errors";
 import { pageParams } from "../../lib/pagination";
+import { wsRegistry } from "../../lib/ws-registry";
 import { authMacro } from "../../middleware/auth";
+import { notifRepo } from "../notifications/repository";
+import { createNotificationService } from "../notifications/service";
 import { usersRepo } from "../users/repository";
 import { toPerizinanDTO } from "./dto";
 import { assertCanView } from "./guards";
 import { perizinanRepo } from "./repository";
-import { noopNotify, PerizinanService } from "./service";
+import { PerizinanService } from "./service";
 
-const service = new PerizinanService(perizinanRepo, usersRepo, noopNotify);
+const notify = createNotificationService({ notifRepo, usersRepo, ws: wsRegistry });
+const service = new PerizinanService(perizinanRepo, usersRepo, notify);
 
 const jenisIzinSchema = t.Union(JENIS_IZIN.map((j) => t.Literal(j)));
 const statusSchema = t.Union(PERIZINAN_STATUS.map((s) => t.Literal(s)));
