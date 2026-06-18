@@ -15,9 +15,9 @@ export function formatTypeBoxErrors(error: unknown): Record<string, string[]> {
 }
 
 type ErrorHandlerContext = {
-  code: string;
+  code: string | number;
   error: unknown;
-  set: { status: number | string };
+  set: { status?: number | string };
 };
 
 export function onErrorHandler({ code, error, set }: ErrorHandlerContext) {
