@@ -1,4 +1,4 @@
-import type { PerizinanStatus } from "@perizinan/shared";
+import type { JenisIzin, PerizinanStatus } from "@perizinan/shared";
 
 const LABELS: Record<PerizinanStatus, string> = {
   menunggu_muaddib: "Menunggu Muaddib",
@@ -22,3 +22,12 @@ const TONES: Record<PerizinanStatus, string> = {
 
 export const statusLabel = (s: PerizinanStatus): string => LABELS[s];
 export const statusTone = (s: PerizinanStatus): string => TONES[s];
+
+const JENIS_IZIN_LABELS: Record<JenisIzin, string> = {
+  pulang: "Pulang",
+  keluar_kota: "Keluar Kota",
+  kegiatan_sekolah: "Kegiatan Sekolah",
+  lainnya: "Lainnya",
+};
+
+export const jenisIzinLabel = (j: JenisIzin): string => JENIS_IZIN_LABELS[j];
