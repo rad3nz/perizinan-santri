@@ -81,7 +81,7 @@ export const notifications = mysqlTable(
     type: varchar("type", { length: 50 }).notNull(),
     message: varchar("message", { length: 255 }).notNull(), // Indonesian copy
     isRead: boolean("is_read").notNull().default(false),
-    perizinanId: int("perizinan_id").references(() => perizinan.id),
+    perizinanId: int("perizinan_id").references(() => perizinan.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
   },

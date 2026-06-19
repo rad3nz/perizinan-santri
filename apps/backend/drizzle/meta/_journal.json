@@ -8,6 +8,13 @@
       "when": 1781759037292,
       "tag": "0000_panoramic_black_bird",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1781867187716,
+      "tag": "0001_motionless_power_man",
+      "breakpoints": true
     }
   ]
 }
