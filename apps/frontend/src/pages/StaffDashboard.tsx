@@ -31,15 +31,17 @@ export function StaffDashboard({ title = "Dashboard" }: { title?: string }) {
         <PeriodToggle value={period} onChange={setPeriod} />
       </Group>
       <SimpleGrid cols={{ base: 2, sm: 3 }}>
-        <StatCard label="Total Santri" value={stats.totalSantri} icon={Users} />
         {showSantriDiAsrama ? (
           <StatCard
             label="Santri di Asrama"
-            value={stats.santriDiAsrama}
+            value={`${stats.santriDiAsrama} / ${stats.totalSantri}`}
             color="teal"
             icon={Home}
+            hint="di asrama / total"
           />
-        ) : null}
+        ) : (
+          <StatCard label="Total Santri" value={stats.totalSantri} icon={Users} />
+        )}
         <StatCard
           label="Menunggu Muaddib"
           value={stats.menungguMuaddib}
