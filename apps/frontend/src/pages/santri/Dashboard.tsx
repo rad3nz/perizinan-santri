@@ -1,11 +1,15 @@
-import { Center, Loader, SimpleGrid, Stack, Title } from "@mantine/core";
+import { Center, Group, Loader, SimpleGrid, Stack, Title } from "@mantine/core";
 import { CheckCircle2, ClipboardList, Clock, LogOut, XCircle } from "lucide-react";
+import { useState } from "react";
 import { useDashboardStats } from "../../api/hooks/useDashboard";
 import type { SantriStats } from "../../api/types";
+import { PeriodToggle } from "../../components/PeriodToggle";
 import { StatCard } from "../../components/StatCard";
+import { type PeriodKind, periodRange } from "../../lib/period";
 
 export function SantriDashboard() {
-  const query = useDashboardStats();
+  const [period, setPeriod] = useState<PeriodKind>("month");
+  const query = useDashboardStats(periodRange(period));
   const stats = query.data?.data as SantriStats | undefined;
 
   if (query.isLoading || !stats) {
@@ -18,7 +22,10 @@ export function SantriDashboard() {
 
   return (
     <Stack>
-      <Title order={2}>Dashboard</Title>
+      <Group justify="space-between" align="center">
+        <Title order={2}>Dashboard</Title>
+        <PeriodToggle value={period} onChange={setPeriod} />
+      </Group>
       <SimpleGrid cols={{ base: 2, sm: 3, lg: 5 }}>
         <StatCard label="Total Perizinan" value={stats.totalPerizinan} icon={ClipboardList} />
         <StatCard label="Menunggu" value={stats.menunggu} color="yellow" icon={Clock} />
