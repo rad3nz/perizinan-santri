@@ -23,7 +23,13 @@ export function ApproveModal({
     onClose();
   };
   return (
-    <Modal opened={opened} onClose={handleClose} title={title} centered>
+    <Modal
+      opened={opened}
+      onClose={handleClose}
+      title={title}
+      centered
+      transitionProps={{ transition: "pop", duration: 200 }}
+    >
       <Stack>
         <Text size="sm">Setujui perizinan ini? Anda dapat menambahkan catatan (opsional).</Text>
         <Textarea

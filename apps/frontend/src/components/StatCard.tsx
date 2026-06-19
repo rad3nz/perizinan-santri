@@ -13,7 +13,7 @@ export function StatCard({
   icon?: LucideIcon;
 }) {
   return (
-    <Card withBorder padding="md" radius="md">
+    <Card withBorder padding="md" radius="md" className="motion-hover-lift">
       <Group justify="space-between" wrap="nowrap" align="flex-start">
         <Stack gap={2}>
           <Text size="sm" c="dimmed">

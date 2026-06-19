@@ -18,7 +18,13 @@ export function RejectModal({ opened, onClose, onSubmit, loading }: RejectModalP
   };
 
   return (
-    <Modal opened={opened} onClose={handleClose} title="Tolak Perizinan" centered>
+    <Modal
+      opened={opened}
+      onClose={handleClose}
+      title="Tolak Perizinan"
+      centered
+      transitionProps={{ transition: "pop", duration: 200 }}
+    >
       <Stack>
         <Textarea
           label="Alasan penolakan"
