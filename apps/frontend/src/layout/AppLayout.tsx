@@ -3,6 +3,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { GraduationCap } from "lucide-react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import { RouteTransition } from "../components/RouteTransition";
 import { navItemsFor } from "../lib/nav";
 import { isNavItemActive } from "../lib/nav-active";
 import { useNotificationSocket } from "../lib/ws";
@@ -49,7 +50,9 @@ export function AppLayout() {
         })}
       </AppShell.Navbar>
       <AppShell.Main>
-        <Outlet />
+        <RouteTransition>
+          <Outlet />
+        </RouteTransition>
       </AppShell.Main>
     </AppShell>
   );
