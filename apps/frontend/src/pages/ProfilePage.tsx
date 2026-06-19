@@ -61,8 +61,10 @@ export function ProfilePage() {
   if (!user) return null;
 
   return (
-    <Stack maw={520}>
-      <Title order={2}>Profil</Title>
+    <Stack maw={520} w="100%" mx="auto">
+      <Title order={2} ta="center">
+        Profil
+      </Title>
       <Card withBorder padding="lg" radius="md">
         <Stack gap="xs">
           <InfoRow label="Nama" value={user.name} />

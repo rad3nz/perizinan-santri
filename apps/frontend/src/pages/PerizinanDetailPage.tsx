@@ -1,5 +1,6 @@
-import { Card, Center, Grid, Group, Loader, Stack, Text, Title } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { Button, Card, Center, Grid, Group, Loader, Stack, Text, Title } from "@mantine/core";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import { usePerizinanDetail } from "../api/hooks/usePerizinan";
 import { PerizinanActions } from "../components/PerizinanActions";
 import { PerizinanTimeline } from "../components/PerizinanTimeline";
@@ -20,6 +21,7 @@ function Field({ label, value }: { label: string; value: string }) {
 
 export function PerizinanDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const query = usePerizinanDetail(Number(id));
   const perizinan = query.data?.data;
 
@@ -40,6 +42,15 @@ export function PerizinanDetailPage() {
 
   return (
     <Stack>
+      <Button
+        variant="subtle"
+        color="gray"
+        leftSection={<ArrowLeft size={16} strokeWidth={1.75} />}
+        onClick={() => navigate(-1)}
+        w="fit-content"
+      >
+        Kembali
+      </Button>
       <Group justify="space-between">
         <Title order={2}>Detail Perizinan</Title>
         <StatusBadge status={perizinan.status} />
