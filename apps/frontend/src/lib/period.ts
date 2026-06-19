@@ -66,3 +66,41 @@ export function periodRange(
 ): { dateFrom: string; dateTo: string } {
   return kind === "week" ? currentWeekRange(now) : currentMonthRange(now);
 }
+
+// Short label for the active period, used as a caption on period-scoped stat cards.
+export const PERIOD_LABEL: Record<PeriodKind, string> = {
+  month: "Bulan ini",
+  week: "Minggu ini",
+};
+
+const SHORT_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mei",
+  "Jun",
+  "Jul",
+  "Agu",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
+];
+
+// Human-readable date window, e.g. "1–30 Jun 2026" or "29 Jun – 5 Jul 2026".
+export function formatRangeLabel({
+  dateFrom,
+  dateTo,
+}: {
+  dateFrom: string;
+  dateTo: string;
+}): string {
+  const a = dayjs(dateFrom);
+  const b = dayjs(dateTo);
+  const year = b.year();
+  if (a.month() === b.month() && a.year() === b.year()) {
+    return `${a.date()}–${b.date()} ${SHORT_MONTHS[b.month()]} ${year}`;
+  }
+  return `${a.date()} ${SHORT_MONTHS[a.month()]} – ${b.date()} ${SHORT_MONTHS[b.month()]} ${year}`;
+}

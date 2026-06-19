@@ -6,7 +6,7 @@ import type { StaffStats } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { PeriodToggle } from "../components/PeriodToggle";
 import { StatCard } from "../components/StatCard";
-import { type PeriodKind, periodRange } from "../lib/period";
+import { PERIOD_LABEL, type PeriodKind, periodRange } from "../lib/period";
 
 export function StaffDashboard({ title = "Dashboard" }: { title?: string }) {
   const { role } = useAuth();
@@ -52,7 +52,13 @@ export function StaffDashboard({ title = "Dashboard" }: { title?: string }) {
           color="yellow"
           icon={UserCheck}
         />
-        <StatCard label="Disetujui" value={stats.disetujui} color="green" icon={CheckCircle2} />
+        <StatCard
+          label="Disetujui"
+          value={stats.disetujui}
+          color="green"
+          icon={CheckCircle2}
+          hint={PERIOD_LABEL[period]}
+        />
         <StatCard label="Berangkat" value={stats.berangkat} color="blue" icon={LogOut} />
         <StatCard label="Kembali Hari Ini" value={stats.kembaliHariIni} color="gray" icon={LogIn} />
       </SimpleGrid>

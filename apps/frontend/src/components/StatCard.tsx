@@ -6,11 +6,13 @@ export function StatCard({
   value,
   color,
   icon: Icon,
+  hint,
 }: {
   label: string;
   value: number | string;
   color?: string;
   icon?: LucideIcon;
+  hint?: string;
 }) {
   return (
     <Card withBorder padding="md" radius="md" className="motion-hover-lift">
@@ -22,6 +24,11 @@ export function StatCard({
           <Title order={2} c={color ? `${color}.8` : undefined}>
             {value}
           </Title>
+          {hint ? (
+            <Text size="xs" c="dimmed" fw={500}>
+              {hint}
+            </Text>
+          ) : null}
         </Stack>
         {Icon ? (
           <ThemeIcon variant="light" color={color ?? "brand"} size={38} radius="md">
