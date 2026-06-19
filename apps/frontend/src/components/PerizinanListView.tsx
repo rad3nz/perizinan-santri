@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useKamarList } from "../api/hooks/useKamar";
 import { usePerizinanList } from "../api/hooks/usePerizinan";
 import type { Perizinan } from "../api/types";
-import { formatTanggal } from "../lib/format";
+import { durationHari, formatTanggal } from "../lib/format";
 import { jenisIzinLabel, statusLabel } from "../lib/labels";
 import { currentPeriod, monthRange } from "../lib/period";
 import { type Column, DataTable } from "./DataTable";
@@ -66,6 +66,11 @@ export function PerizinanListView({
     { header: "Jenis", render: (r) => jenisIzinLabel(r.jenisIzin) },
     { header: "Tujuan", render: (r) => r.tujuan },
     { header: "Keluar", render: (r) => formatTanggal(r.tanggalKeluar) },
+    { header: "Rencana Kembali", render: (r) => formatTanggal(r.tanggalKembaliRencana) },
+    {
+      header: "Lama",
+      render: (r) => `${durationHari(r.tanggalKeluar, r.tanggalKembaliRencana)} hari`,
+    },
     { header: "Status", render: (r) => <StatusBadge status={r.status} /> },
   ];
 
@@ -98,6 +103,9 @@ export function PerizinanListView({
               placeholder="Semua status"
               clearable
               data={PERIZINAN_STATUS.map((s) => ({ value: s, label: statusLabel(s) }))}
+              renderOption={({ option }) => (
+                <StatusBadge status={option.value as PerizinanStatus} />
+              )}
               value={status}
               onChange={resetPage(setStatus)}
             />
@@ -130,6 +138,7 @@ export function PerizinanListView({
             columns={columns}
             rows={payload?.items ?? []}
             rowKey={(r) => r.id}
+            rowVersion={(r) => r.updatedAt}
             onRowClick={(r) => navigate(`${basePath}/${r.id}`)}
             loading={query.isLoading}
             page={page}

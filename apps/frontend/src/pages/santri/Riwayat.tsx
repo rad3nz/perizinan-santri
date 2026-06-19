@@ -9,7 +9,7 @@ import { type Column, DataTable } from "../../components/DataTable";
 import { MonthYearFilter } from "../../components/MonthYearFilter";
 import { PageHeader } from "../../components/PageHeader";
 import { StatusBadge } from "../../components/StatusBadge";
-import { formatTanggal } from "../../lib/format";
+import { durationHari, formatTanggal } from "../../lib/format";
 import { approvalState, jenisIzinLabel } from "../../lib/labels";
 import { currentPeriod, monthRange } from "../../lib/period";
 
@@ -34,6 +34,11 @@ export function RiwayatPerizinan() {
     { header: "Jenis", render: (r) => jenisIzinLabel(r.jenisIzin) },
     { header: "Tujuan", render: (r) => r.tujuan },
     { header: "Keluar", render: (r) => formatTanggal(r.tanggalKeluar) },
+    { header: "Rencana Kembali", render: (r) => formatTanggal(r.tanggalKembaliRencana) },
+    {
+      header: "Lama",
+      render: (r) => `${durationHari(r.tanggalKeluar, r.tanggalKembaliRencana)} hari`,
+    },
     {
       header: "Muaddib",
       render: (r) => <ApprovalLevelIcon level={approvalState(r.status).muaddib} who="Muaddib" />,
@@ -73,6 +78,7 @@ export function RiwayatPerizinan() {
             columns={columns}
             rows={payload?.items ?? []}
             rowKey={(r) => r.id}
+            rowVersion={(r) => r.updatedAt}
             onRowClick={(r) => navigate(`/santri/perizinan/${r.id}`)}
             loading={query.isLoading}
             page={page}
