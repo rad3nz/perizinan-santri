@@ -1,4 +1,5 @@
-import { Group, Select, Stack, Title } from "@mantine/core";
+import { Group, Paper, Select, Stack } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import {
   JENIS_IZIN,
   type JenisIzin,
@@ -13,6 +14,8 @@ import type { Perizinan } from "../api/types";
 import { formatTanggal } from "../lib/format";
 import { jenisIzinLabel, statusLabel } from "../lib/labels";
 import { type Column, DataTable } from "./DataTable";
+import { PageHeader } from "./PageHeader";
+import { PerizinanRowActions } from "./PerizinanRowActions";
 import { StatusBadge } from "./StatusBadge";
 
 interface PerizinanListViewProps {
@@ -20,6 +23,7 @@ interface PerizinanListViewProps {
   basePath: string;
   showKamarFilter?: boolean;
   showJenisFilter?: boolean;
+  showActions?: boolean;
 }
 
 export function PerizinanListView({
@@ -27,12 +31,14 @@ export function PerizinanListView({
   basePath,
   showKamarFilter,
   showJenisFilter,
+  showActions,
 }: PerizinanListViewProps) {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string | null>(null);
   const [kamarId, setKamarId] = useState<string | null>(null);
   const [jenisIzin, setJenisIzin] = useState<string | null>(null);
+  const [range, setRange] = useState<[string | null, string | null]>([null, null]);
 
   const kamarQuery = useKamarList();
   const kamarOptions =
@@ -43,6 +49,8 @@ export function PerizinanListView({
     status: (status as PerizinanStatus | null) ?? undefined,
     kamarId: kamarId ? Number(kamarId) : undefined,
     jenisIzin: (jenisIzin as JenisIzin | null) ?? undefined,
+    dateFrom: range[0] ?? undefined,
+    dateTo: range[1] ?? undefined,
   });
   const payload = query.data?.data;
 
@@ -54,6 +62,10 @@ export function PerizinanListView({
     { header: "Status", render: (r) => <StatusBadge status={r.status} /> },
   ];
 
+  if (showActions) {
+    columns.push({ header: "Aksi", render: (r) => <PerizinanRowActions perizinan={r} /> });
+  }
+
   const resetPage =
     <T,>(setter: (v: T) => void) =>
     (value: T) => {
@@ -63,45 +75,57 @@ export function PerizinanListView({
 
   return (
     <Stack>
-      <Title order={2}>{title}</Title>
-      <Group>
-        <Select
-          placeholder="Semua status"
-          clearable
-          data={PERIZINAN_STATUS.map((s) => ({ value: s, label: statusLabel(s) }))}
-          value={status}
-          onChange={resetPage(setStatus)}
-        />
-        {showKamarFilter ? (
-          <Select
-            placeholder="Semua kamar"
-            clearable
-            data={kamarOptions}
-            value={kamarId}
-            onChange={resetPage(setKamarId)}
+      <PageHeader title={title} description="Kelola dan tinjau perizinan santri." />
+      <Paper withBorder radius="md" p="md">
+        <Stack>
+          <Group>
+            <Select
+              placeholder="Semua status"
+              clearable
+              data={PERIZINAN_STATUS.map((s) => ({ value: s, label: statusLabel(s) }))}
+              value={status}
+              onChange={resetPage(setStatus)}
+            />
+            <DatePickerInput
+              type="range"
+              clearable
+              valueFormat="DD MMM YYYY"
+              placeholder="Rentang tanggal keluar"
+              value={range}
+              onChange={resetPage(setRange)}
+            />
+            {showKamarFilter ? (
+              <Select
+                placeholder="Semua kamar"
+                clearable
+                data={kamarOptions}
+                value={kamarId}
+                onChange={resetPage(setKamarId)}
+              />
+            ) : null}
+            {showJenisFilter ? (
+              <Select
+                placeholder="Semua jenis"
+                clearable
+                data={JENIS_IZIN.map((j) => ({ value: j, label: jenisIzinLabel(j) }))}
+                value={jenisIzin}
+                onChange={resetPage(setJenisIzin)}
+              />
+            ) : null}
+          </Group>
+          <DataTable
+            columns={columns}
+            rows={payload?.items ?? []}
+            rowKey={(r) => r.id}
+            onRowClick={(r) => navigate(`${basePath}/${r.id}`)}
+            loading={query.isLoading}
+            page={page}
+            total={payload?.total}
+            limit={payload?.limit}
+            onPageChange={setPage}
           />
-        ) : null}
-        {showJenisFilter ? (
-          <Select
-            placeholder="Semua jenis"
-            clearable
-            data={JENIS_IZIN.map((j) => ({ value: j, label: jenisIzinLabel(j) }))}
-            value={jenisIzin}
-            onChange={resetPage(setJenisIzin)}
-          />
-        ) : null}
-      </Group>
-      <DataTable
-        columns={columns}
-        rows={payload?.items ?? []}
-        rowKey={(r) => r.id}
-        onRowClick={(r) => navigate(`${basePath}/${r.id}`)}
-        loading={query.isLoading}
-        page={page}
-        total={payload?.total}
-        limit={payload?.limit}
-        onPageChange={setPage}
-      />
+        </Stack>
+      </Paper>
     </Stack>
   );
 }

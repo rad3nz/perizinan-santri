@@ -1,6 +1,7 @@
 import { Button, Group } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { TRANSITIONS } from "@perizinan/shared";
+import { Check, LogIn, LogOut, X } from "lucide-react";
 import { useState } from "react";
 import {
   useApproveMuaddib,
@@ -12,6 +13,7 @@ import {
 } from "../api/hooks/usePerizinan";
 import type { Perizinan } from "../api/types";
 import { useAuth } from "../auth/useAuth";
+import { ApproveModal } from "./ApproveModal";
 import { RejectModal } from "./RejectModal";
 
 function errorMessage(error: unknown): string {
@@ -34,6 +36,7 @@ export function PerizinanActions({ perizinan }: { perizinan: Perizinan }) {
   const approveMudir = useApproveMudir(id);
   const rejectMudir = useRejectMudir(id);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [approveOpen, setApproveOpen] = useState(false);
 
   const notifyError = (error: unknown) =>
     notifications.show({ color: "red", message: errorMessage(error) });
@@ -44,6 +47,7 @@ export function PerizinanActions({ perizinan }: { perizinan: Perizinan }) {
       <Group>
         <Button
           color="brand"
+          leftSection={<LogOut size={16} strokeWidth={1.75} />}
           disabled={status !== TRANSITIONS.berangkat.from}
           loading={berangkat.isPending}
           onClick={() =>
@@ -57,6 +61,7 @@ export function PerizinanActions({ perizinan }: { perizinan: Perizinan }) {
         </Button>
         <Button
           color="brand"
+          leftSection={<LogIn size={16} strokeWidth={1.75} />}
           disabled={status !== TRANSITIONS.kembali.from}
           loading={kembali.isPending}
           onClick={() =>
@@ -78,20 +83,37 @@ export function PerizinanActions({ perizinan }: { perizinan: Perizinan }) {
         <Group>
           <Button
             color="brand"
-            loading={approveMuaddib.isPending}
-            onClick={() =>
-              approveMuaddib.mutate(
-                {},
-                { onSuccess: () => notifyOk("Perizinan disetujui."), onError: notifyError },
-              )
-            }
+            leftSection={<Check size={16} strokeWidth={1.75} />}
+            onClick={() => setApproveOpen(true)}
           >
             Setujui
           </Button>
-          <Button color="red" variant="light" onClick={() => setRejectOpen(true)}>
+          <Button
+            color="red"
+            variant="light"
+            leftSection={<X size={16} strokeWidth={1.75} />}
+            onClick={() => setRejectOpen(true)}
+          >
             Tolak
           </Button>
         </Group>
+        <ApproveModal
+          opened={approveOpen}
+          onClose={() => setApproveOpen(false)}
+          loading={approveMuaddib.isPending}
+          onSubmit={(catatan) =>
+            approveMuaddib.mutate(
+              { catatan },
+              {
+                onSuccess: () => {
+                  setApproveOpen(false);
+                  notifyOk("Perizinan disetujui.");
+                },
+                onError: notifyError,
+              },
+            )
+          }
+        />
         <RejectModal
           opened={rejectOpen}
           onClose={() => setRejectOpen(false)}
@@ -119,20 +141,37 @@ export function PerizinanActions({ perizinan }: { perizinan: Perizinan }) {
         <Group>
           <Button
             color="brand"
-            loading={approveMudir.isPending}
-            onClick={() =>
-              approveMudir.mutate(
-                {},
-                { onSuccess: () => notifyOk("Perizinan disetujui."), onError: notifyError },
-              )
-            }
+            leftSection={<Check size={16} strokeWidth={1.75} />}
+            onClick={() => setApproveOpen(true)}
           >
             Setujui
           </Button>
-          <Button color="red" variant="light" onClick={() => setRejectOpen(true)}>
+          <Button
+            color="red"
+            variant="light"
+            leftSection={<X size={16} strokeWidth={1.75} />}
+            onClick={() => setRejectOpen(true)}
+          >
             Tolak
           </Button>
         </Group>
+        <ApproveModal
+          opened={approveOpen}
+          onClose={() => setApproveOpen(false)}
+          loading={approveMudir.isPending}
+          onSubmit={(catatan) =>
+            approveMudir.mutate(
+              { catatan },
+              {
+                onSuccess: () => {
+                  setApproveOpen(false);
+                  notifyOk("Perizinan disetujui.");
+                },
+                onError: notifyError,
+              },
+            )
+          }
+        />
         <RejectModal
           opened={rejectOpen}
           onClose={() => setRejectOpen(false)}

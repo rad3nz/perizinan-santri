@@ -47,7 +47,11 @@ export const router = createBrowserRouter([
               {
                 path: "/muaddib/perizinan",
                 element: (
-                  <PerizinanListView title="Daftar Perizinan" basePath="/muaddib/perizinan" />
+                  <PerizinanListView
+                    title="Daftar Perizinan"
+                    basePath="/muaddib/perizinan"
+                    showActions
+                  />
                 ),
               },
               { path: "/muaddib/perizinan/:id", element: <PerizinanDetailPage /> },
@@ -59,7 +63,13 @@ export const router = createBrowserRouter([
               { path: "/mudir/dashboard", element: <StaffDashboard title="Dashboard Mudir" /> },
               {
                 path: "/mudir/perizinan",
-                element: <PerizinanListView title="Daftar Perizinan" basePath="/mudir/perizinan" />,
+                element: (
+                  <PerizinanListView
+                    title="Daftar Perizinan"
+                    basePath="/mudir/perizinan"
+                    showActions
+                  />
+                ),
               },
               { path: "/mudir/perizinan/:id", element: <PerizinanDetailPage /> },
             ],
