@@ -1,5 +1,5 @@
 import type { JenisIzin, PerizinanStatus, Role } from "@perizinan/shared";
-import { and, desc, eq, inArray, type SQL } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/mysql-core";
 import { db } from "../../db/client";
 import { kamar, perizinan, users } from "../../db/schema";
@@ -48,6 +48,8 @@ type Filters = {
   jenisIzin?: JenisIzin;
   kamarId?: number;
   userId?: number;
+  dateFrom?: string;
+  dateTo?: string;
 };
 
 function inKamar(kamarId: number) {
@@ -69,6 +71,8 @@ function buildWhere(actor: Scope, f: Filters): SQL | undefined {
   if (f.userId != null && actor.role === "admin") conds.push(eq(perizinan.userId, f.userId));
   if (f.kamarId != null && (actor.role === "admin" || actor.role === "mudir"))
     conds.push(inKamar(f.kamarId));
+  if (f.dateFrom) conds.push(gte(perizinan.tanggalKeluar, new Date(f.dateFrom)));
+  if (f.dateTo) conds.push(lte(perizinan.tanggalKeluar, new Date(f.dateTo)));
 
   return conds.length ? and(...conds) : undefined;
 }

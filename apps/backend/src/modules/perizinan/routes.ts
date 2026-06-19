@@ -44,6 +44,8 @@ export const perizinanRoutes = new Elysia({ prefix: "/api/perizinan" })
         jenisIzin: query.jenisIzin,
         kamarId: query.kamarId,
         userId: query.userId,
+        dateFrom: query.dateFrom,
+        dateTo: query.dateTo,
       });
       return envelope.ok({ items: items.map(toPerizinanDTO), total, page, limit });
     },
@@ -56,6 +58,8 @@ export const perizinanRoutes = new Elysia({ prefix: "/api/perizinan" })
         jenisIzin: t.Optional(jenisIzinSchema),
         kamarId: t.Optional(t.Numeric()),
         userId: t.Optional(t.Numeric()),
+        dateFrom: t.Optional(t.String({ format: "date" })),
+        dateTo: t.Optional(t.String({ format: "date" })),
       }),
     },
   )

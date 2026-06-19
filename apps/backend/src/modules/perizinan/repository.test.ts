@@ -35,3 +35,17 @@ test("muaddib sees only their kamar", async () => {
   const { items } = await perizinanRepo.list(muaddib1, { page: 1, limit: 100 });
   expect(items.every((r) => r.santri.kamar?.id === muaddib1.kamarId)).toBe(true);
 });
+
+test("filters by tanggalKeluar date range", async () => {
+  const wide = await perizinanRepo.list(mudir, { page: 1, limit: 100 });
+  const first = wide.items[0];
+  if (!first) return; // no seed rows visible to mudir; nothing to assert
+  const pivot = String(first.tanggalKeluar).slice(0, 10);
+  const { items } = await perizinanRepo.list(mudir, {
+    page: 1,
+    limit: 100,
+    dateFrom: pivot,
+    dateTo: pivot,
+  });
+  expect(items.every((r) => String(r.tanggalKeluar).slice(0, 10) === pivot)).toBe(true);
+});
