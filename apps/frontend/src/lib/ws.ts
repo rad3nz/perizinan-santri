@@ -1,4 +1,5 @@
 import { notifications } from "@mantine/notifications";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useAuthStore } from "../auth/auth-store";
 import { type ServerEvent, useNotifStore } from "./notif-store";
@@ -14,6 +15,7 @@ const MAX_BACKOFF = 30_000;
  */
 export function useNotificationSocket(): void {
   const token = useAuthStore((s) => s.token);
+  const qc = useQueryClient();
 
   useEffect(() => {
     if (!token) return;
@@ -45,6 +47,9 @@ export function useNotificationSocket(): void {
         }
         useNotifStore.getState().onEvent(evt);
         if (evt.type === "notification") {
+          // The dropdown list renders from the React Query cache; the WS push only
+          // updates the Zustand store, so invalidate to refetch the list in real time.
+          qc.invalidateQueries({ queryKey: ["notifications"] });
           notifications.show({ message: evt.notification.message, color: "brand" });
         }
       };
@@ -73,5 +78,5 @@ export function useNotificationSocket(): void {
       ws?.close();
       useNotifStore.getState().reset();
     };
-  }, [token]);
+  }, [token, qc]);
 }
