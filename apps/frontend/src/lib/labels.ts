@@ -31,3 +31,26 @@ const JENIS_IZIN_LABELS: Record<JenisIzin, string> = {
 };
 
 export const jenisIzinLabel = (j: JenisIzin): string => JENIS_IZIN_LABELS[j];
+
+export type ApprovalLevel = "approved" | "rejected" | "pending" | "none";
+export interface ApprovalState {
+  muaddib: ApprovalLevel;
+  mudir: ApprovalLevel;
+}
+
+export function approvalState(status: PerizinanStatus): ApprovalState {
+  const muaddib: ApprovalLevel =
+    status === "menunggu_muaddib"
+      ? "pending"
+      : status === "ditolak_muaddib"
+        ? "rejected"
+        : "approved";
+
+  let mudir: ApprovalLevel;
+  if (status === "menunggu_muaddib" || status === "ditolak_muaddib") mudir = "none";
+  else if (status === "menunggu_mudir") mudir = "pending";
+  else if (status === "ditolak_mudir") mudir = "rejected";
+  else mudir = "approved"; // disetujui | berangkat | kembali
+
+  return { muaddib, mudir };
+}
