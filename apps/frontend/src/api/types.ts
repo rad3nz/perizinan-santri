@@ -27,6 +27,7 @@ export interface SantriStats {
 }
 export interface StaffStats {
   totalSantri: number;
+  santriDiAsrama: number;
   menungguMuaddib: number;
   menungguMudir: number;
   disetujui: number;

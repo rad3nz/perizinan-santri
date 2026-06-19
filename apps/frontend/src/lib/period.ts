@@ -40,3 +40,29 @@ export function monthRange(
     dateTo: start.endOf("month").format("YYYY-MM-DD"),
   };
 }
+
+// Inclusive [dateFrom, dateTo] for the calendar month containing `now`.
+export function currentMonthRange(now: Date = new Date()): { dateFrom: string; dateTo: string } {
+  const { month, year } = currentPeriod(now);
+  return monthRange(year, month);
+}
+
+// Inclusive [dateFrom, dateTo] for the Monday–Sunday week containing `now`.
+// Computed without the dayjs isoWeek plugin: day() is 0 (Sun)…6 (Sat).
+export function currentWeekRange(now: Date = new Date()): { dateFrom: string; dateTo: string } {
+  const d = dayjs(now);
+  const start = d.subtract((d.day() + 6) % 7, "day");
+  return {
+    dateFrom: start.format("YYYY-MM-DD"),
+    dateTo: start.add(6, "day").format("YYYY-MM-DD"),
+  };
+}
+
+export type PeriodKind = "month" | "week";
+
+export function periodRange(
+  kind: PeriodKind,
+  now: Date = new Date(),
+): { dateFrom: string; dateTo: string } {
+  return kind === "week" ? currentWeekRange(now) : currentMonthRange(now);
+}
