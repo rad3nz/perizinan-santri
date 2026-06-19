@@ -1,4 +1,5 @@
-import { Center, Group, Loader, Pagination, Table, Text } from "@mantine/core";
+import { Center, Group, Loader, Pagination, Stack, Table, Text } from "@mantine/core";
+import { Inbox } from "lucide-react";
 import type { ReactNode } from "react";
 
 export interface Column<T> {
@@ -40,9 +41,14 @@ export function DataTable<T>({
   }
   if (rows.length === 0) {
     return (
-      <Text c="dimmed" py="md">
-        {emptyText}
-      </Text>
+      <Center py="xl">
+        <Stack align="center" gap="xs">
+          <Inbox size={28} strokeWidth={1.5} color="var(--mantine-color-dimmed)" />
+          <Text c="dimmed" size="sm">
+            {emptyText}
+          </Text>
+        </Stack>
+      </Center>
     );
   }
 
