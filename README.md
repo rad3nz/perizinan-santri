@@ -84,13 +84,7 @@ Semua kata sandi: **`password`**.
 apps/backend     ElysiaJS + Drizzle + MariaDB (REST + WS, migrasi, seed)
 apps/frontend    React + Vite + Mantine (SPA)
 packages/shared  enum + TRANSITIONS (state machine) yang dipakai bersama
-docs/            spesifikasi kanonik 00–13
-docs/superpowers implementation plan + implementation-insights.md
 ```
-
-Detail desain ada di [`docs/`](./docs/) (arsitektur, data model, aturan bisnis,
-RBAC, API, realtime, frontend, deployment, dst.) dan catatan implementasi di
-[`docs/superpowers/implementation-insights.md`](./docs/superpowers/implementation-insights.md).
 
 ## Pengujian & kualitas
 
