@@ -2,6 +2,7 @@ import { MantineProvider } from "@mantine/core";
 import type { PerizinanStatus } from "@perizinan/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Perizinan } from "../api/types";
 import { type AuthUser, useAuthStore } from "../auth/auth-store";
@@ -55,14 +56,17 @@ beforeEach(() => useAuthStore.setState({ token: "tok", user: muaddib }));
 afterEach(cleanup);
 
 describe("PerizinanRowActions (muaddib)", () => {
-  it("shows actions on menunggu_muaddib", () => {
+  it("shows an Aksi dropdown revealing Setujui/Tolak on menunggu_muaddib", async () => {
     renderRow("menunggu_muaddib");
-    expect(screen.getByRole("button", { name: "Setujui" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Tolak" })).toBeInTheDocument();
+    const trigger = screen.getByRole("button", { name: /Aksi/ });
+    expect(trigger).toBeInTheDocument();
+
+    await userEvent.click(trigger);
+    expect(await screen.findByText("Setujui")).toBeInTheDocument();
+    expect(screen.getByText("Tolak")).toBeInTheDocument();
   });
   it("renders no actions when not actionable for this role", () => {
     renderRow("menunggu_mudir");
-    expect(screen.queryByRole("button", { name: "Setujui" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Tolak" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Aksi/ })).not.toBeInTheDocument();
   });
 });

@@ -1,7 +1,7 @@
-import { Button, Group } from "@mantine/core";
+import { Box, Button, Menu } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { TRANSITIONS } from "@perizinan/shared";
-import { Check, X } from "lucide-react";
+import { Check, ChevronDown, X } from "lucide-react";
 import { type MouseEvent, useState } from "react";
 import {
   useApproveMuaddib,
@@ -49,24 +49,34 @@ export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
   const stop = (e: MouseEvent) => e.stopPropagation();
 
   return (
-    <Group gap="xs" onClick={stop}>
-      <Button
-        size="xs"
-        color="brand"
-        leftSection={<Check size={16} strokeWidth={1.75} />}
-        onClick={() => setApproveOpen(true)}
-      >
-        Setujui
-      </Button>
-      <Button
-        size="xs"
-        variant="light"
-        color="red"
-        leftSection={<X size={16} strokeWidth={1.75} />}
-        onClick={() => setRejectOpen(true)}
-      >
-        Tolak
-      </Button>
+    <Box onClick={stop}>
+      <Menu position="bottom-end" withinPortal>
+        <Menu.Target>
+          <Button
+            size="xs"
+            variant="light"
+            rightSection={<ChevronDown size={14} strokeWidth={1.75} />}
+          >
+            Aksi
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Item
+            color="green"
+            leftSection={<Check size={16} strokeWidth={1.75} />}
+            onClick={() => setApproveOpen(true)}
+          >
+            Setujui
+          </Menu.Item>
+          <Menu.Item
+            color="red"
+            leftSection={<X size={16} strokeWidth={1.75} />}
+            onClick={() => setRejectOpen(true)}
+          >
+            Tolak
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
       <ApproveModal
         opened={approveOpen}
         onClose={() => setApproveOpen(false)}
@@ -101,6 +111,6 @@ export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
           )
         }
       />
-    </Group>
+    </Box>
   );
 }
