@@ -1,4 +1,5 @@
 import { ActionIcon, Button, Group, Indicator, Menu, ScrollArea, Text } from "@mantine/core";
+import { Bell, CheckCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMarkAllRead, useMarkRead, useNotificationsList } from "../api/hooks/useNotifications";
 import type { NotificationItem } from "../api/types";
@@ -31,7 +32,7 @@ export function NotificationBell() {
       <Menu.Target>
         <Indicator label={unreadCount} size={16} color="red" disabled={unreadCount === 0}>
           <ActionIcon variant="subtle" color="gray" aria-label="Notifikasi">
-            🔔
+            <Bell size={20} strokeWidth={1.75} />
           </ActionIcon>
         </Indicator>
       </Menu.Target>
@@ -40,7 +41,12 @@ export function NotificationBell() {
           <Text fw={600} size="sm">
             Notifikasi
           </Text>
-          <Button variant="subtle" size="compact-xs" onClick={readAll}>
+          <Button
+            variant="subtle"
+            size="compact-xs"
+            leftSection={<CheckCheck size={14} strokeWidth={1.75} />}
+            onClick={readAll}
+          >
             Tandai semua dibaca
           </Button>
         </Group>

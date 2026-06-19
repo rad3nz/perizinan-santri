@@ -1,4 +1,5 @@
 import { Avatar, Group, Menu, Text } from "@mantine/core";
+import { LogOut, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useAuthStore } from "../auth/auth-store";
@@ -31,8 +32,17 @@ export function Header() {
           </Group>
         </Menu.Target>
         <Menu.Dropdown>
-          <Menu.Item onClick={() => navigate("/profil")}>Profil</Menu.Item>
-          <Menu.Item color="red" onClick={logout}>
+          <Menu.Item
+            leftSection={<UserRound size={16} strokeWidth={1.75} />}
+            onClick={() => navigate("/profil")}
+          >
+            Profil
+          </Menu.Item>
+          <Menu.Item
+            color="red"
+            leftSection={<LogOut size={16} strokeWidth={1.75} />}
+            onClick={logout}
+          >
             Keluar
           </Menu.Item>
         </Menu.Dropdown>
