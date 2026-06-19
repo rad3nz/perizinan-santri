@@ -13,10 +13,10 @@ const LEVEL_META: Record<
   none: { Icon: MinusCircle, color: "gray", label: "Belum diproses" },
 };
 
-function LevelIcon({ level, who }: { level: ApprovalLevel; who: string }) {
+export function ApprovalLevelIcon({ level, who }: { level: ApprovalLevel; who?: string }) {
   const { Icon, color, label } = LEVEL_META[level];
   return (
-    <Tooltip label={`${who}: ${label}`} withArrow>
+    <Tooltip label={who ? `${who}: ${label}` : label} withArrow>
       <ThemeIcon variant="light" color={color} size="sm" radius="xl">
         <Icon size={16} strokeWidth={1.75} />
       </ThemeIcon>
@@ -28,8 +28,8 @@ export function ApprovalProgress({ status }: { status: PerizinanStatus }) {
   const s = approvalState(status);
   return (
     <Group gap={6} wrap="nowrap">
-      <LevelIcon level={s.muaddib} who="Muaddib" />
-      <LevelIcon level={s.mudir} who="Mudir" />
+      <ApprovalLevelIcon level={s.muaddib} who="Muaddib" />
+      <ApprovalLevelIcon level={s.mudir} who="Mudir" />
     </Group>
   );
 }
