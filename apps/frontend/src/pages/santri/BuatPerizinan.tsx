@@ -3,6 +3,7 @@ import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { JENIS_IZIN, type JenisIzin } from "@perizinan/shared";
+import dayjs from "dayjs";
 import { Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCreatePerizinan } from "../../api/hooks/usePerizinan";
@@ -20,6 +21,7 @@ interface FormValues {
 export function BuatPerizinan() {
   const navigate = useNavigate();
   const create = useCreatePerizinan();
+  const today = dayjs().format("YYYY-MM-DD");
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -68,8 +70,10 @@ export function BuatPerizinan() {
 
   return (
     <Stack>
-      <Title order={2}>Buat Perizinan</Title>
-      <Card withBorder padding="lg" radius="md" maw={560}>
+      <Title order={2} ta="center">
+        Buat Perizinan
+      </Title>
+      <Card withBorder padding="lg" radius="md" maw={560} w="100%" mx="auto">
         <form onSubmit={submit}>
           <Stack>
             <Select
@@ -83,12 +87,14 @@ export function BuatPerizinan() {
               label="Tanggal Keluar"
               required
               valueFormat="DD MMM YYYY"
+              minDate={today}
               {...form.getInputProps("tanggalKeluar")}
             />
             <DatePickerInput
               label="Rencana Kembali"
               required
               valueFormat="DD MMM YYYY"
+              minDate={today}
               {...form.getInputProps("tanggalKembaliRencana")}
             />
             <Textarea label="Catatan" rows={3} {...form.getInputProps("catatan")} />
