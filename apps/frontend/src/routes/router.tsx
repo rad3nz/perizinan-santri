@@ -90,6 +90,7 @@ export const router = createBrowserRouter([
                     showKamarFilter
                     showJenisFilter
                     showKamar
+                    showActions
                   />
                 ),
               },

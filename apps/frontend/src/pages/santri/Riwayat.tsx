@@ -8,6 +8,7 @@ import { ApprovalLevelIcon } from "../../components/ApprovalProgress";
 import { type Column, DataTable } from "../../components/DataTable";
 import { MonthYearFilter } from "../../components/MonthYearFilter";
 import { PageHeader } from "../../components/PageHeader";
+import { PerizinanRowActions } from "../../components/PerizinanRowActions";
 import { StatusBadge } from "../../components/StatusBadge";
 import { durationHari, formatTanggal } from "../../lib/format";
 import { approvalState, jenisIzinLabel } from "../../lib/labels";
@@ -48,6 +49,7 @@ export function RiwayatPerizinan() {
       render: (r) => <ApprovalLevelIcon level={approvalState(r.status).mudir} who="Mudir" />,
     },
     { header: "Status", render: (r) => <StatusBadge status={r.status} /> },
+    { header: "Aksi", render: (r) => <PerizinanRowActions perizinan={r} /> },
   ];
 
   return (
