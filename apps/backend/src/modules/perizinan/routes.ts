@@ -33,6 +33,11 @@ async function dtoById(id: number) {
 
 export const perizinanRoutes = new Elysia({ prefix: "/api/perizinan" })
   .use(authMacro)
+  // Any successful mutation tells every connected client to refetch their tables
+  // and dashboards in real time (covers admin, who receives no notifications).
+  .onAfterHandle(({ request }) => {
+    if (request.method !== "GET") wsRegistry.broadcast({ type: "perizinan_changed" });
+  })
   .get(
     "/",
     async ({ user, query }) => {

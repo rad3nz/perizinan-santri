@@ -22,4 +22,10 @@ export const wsRegistry = {
   sendMany(userIds: number[], event: unknown) {
     for (const id of new Set(userIds)) this.send(id, event);
   },
+  broadcast(event: unknown) {
+    const payload = JSON.stringify(event);
+    for (const set of registry.values()) {
+      for (const ws of set) ws.send(payload);
+    }
+  },
 };

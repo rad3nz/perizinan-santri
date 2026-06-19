@@ -31,7 +31,7 @@ export function NotificationBell() {
     <Menu position="bottom-end" withArrow width={320}>
       <Menu.Target>
         <Indicator label={unreadCount} size={16} color="red" disabled={unreadCount === 0}>
-          <ActionIcon variant="subtle" color="gray" aria-label="Notifikasi">
+          <ActionIcon variant="subtle" color="white" aria-label="Notifikasi">
             <Bell size={20} strokeWidth={1.75} />
           </ActionIcon>
         </Indicator>
@@ -43,7 +43,8 @@ export function NotificationBell() {
           </Text>
           <Button
             variant="subtle"
-            size="compact-xs"
+            size="xs"
+            px="sm"
             leftSection={<CheckCheck size={14} strokeWidth={1.75} />}
             onClick={readAll}
           >

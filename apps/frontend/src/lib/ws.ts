@@ -52,6 +52,11 @@ export function useNotificationSocket(): void {
           qc.invalidateQueries({ queryKey: ["notifications"] });
           notifications.show({ message: evt.notification.message, color: "brand" });
         }
+        if (evt.type === "perizinan_changed") {
+          // Broadcast on any perizinan mutation — refetch tables and dashboards live.
+          qc.invalidateQueries({ queryKey: ["perizinan"] });
+          qc.invalidateQueries({ queryKey: ["dashboard"] });
+        }
       };
 
       ws.onclose = (event) => {

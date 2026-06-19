@@ -15,6 +15,7 @@ export interface NotificationItem {
 export type ServerEvent =
   | { type: "connected"; unreadCount: number }
   | { type: "notification"; notification: NotificationItem; unreadCount: number }
+  | { type: "perizinan_changed" }
   | { type: "pong" };
 
 interface NotifState {

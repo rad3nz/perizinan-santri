@@ -5,6 +5,7 @@ import type { NewNotification, NotifRow } from "./repository";
 export type ServerEvent =
   | { type: "connected"; unreadCount: number }
   | { type: "notification"; notification: NotificationDTO; unreadCount: number }
+  | { type: "perizinan_changed" }
   | { type: "pong" };
 
 type Owner = { id: number; kamarId: number | null };
