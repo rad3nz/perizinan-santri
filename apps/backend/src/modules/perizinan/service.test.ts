@@ -8,6 +8,7 @@ const santri2 = { id: 2, role: "santri" as const, kamarId: 9 };
 const muaddib1 = { id: 11, role: "muaddib" as const, kamarId: 5 };
 const muaddib2 = { id: 12, role: "muaddib" as const, kamarId: 9 };
 const mudir = { id: 21, role: "mudir" as const, kamarId: null };
+const admin = { id: 31, role: "admin" as const, kamarId: null };
 
 function makePerizinan(partial: Partial<PerizinanRow> = {}): PerizinanRow {
   const now = new Date();
@@ -50,6 +51,9 @@ function fakeRepo(rows: PerizinanRow[]): PerizinanRepoPort {
       const row = { ...(store.get(id) as PerizinanRow), ...patch };
       store.set(id, row);
       return row;
+    },
+    async delete(id) {
+      return store.delete(id);
     },
   };
 }
@@ -243,4 +247,78 @@ test("kembali: berangkat -> kembali, sets tanggalKembaliAktual, notifies", async
   expect(u.status).toBe("kembali");
   expect(u.tanggalKembaliAktual).not.toBeNull();
   expect(notifyCalls[0].method).toBe("kembali");
+});
+
+test("remove: owner may delete own menunggu_muaddib", async () => {
+  const p = makePerizinan({ status: "menunggu_muaddib" });
+  const repo = fakeRepo([p]);
+  const svc = new PerizinanService(repo, fakeUsers, recordingNotify());
+  await svc.remove(p.id, santri1);
+  expect(await repo.findById(p.id)).toBeUndefined();
+});
+
+test("remove: owner after muaddib step -> ConflictError", async () => {
+  const p = makePerizinan({ status: "menunggu_mudir" });
+  const svc = svcWith([p]);
+  await expect(svc.remove(p.id, santri1)).rejects.toThrow(ConflictError);
+});
+
+test("remove: non-owner santri -> ForbiddenError", async () => {
+  const p = makePerizinan({ status: "menunggu_muaddib" });
+  const svc = svcWith([p]);
+  await expect(svc.remove(p.id, santri2)).rejects.toThrow(ForbiddenError);
+});
+
+test("remove: admin may delete any status", async () => {
+  const p = makePerizinan({ status: "berangkat" });
+  const repo = fakeRepo([p]);
+  const svc = new PerizinanService(repo, fakeUsers, recordingNotify());
+  await svc.remove(p.id, admin);
+  expect(await repo.findById(p.id)).toBeUndefined();
+});
+
+test("editMuaddib: from menunggu_mudir, reject -> ditolak_muaddib, notifies", async () => {
+  const p = makePerizinan({ status: "menunggu_mudir" });
+  const svc = svcWith([p]);
+  const u = await svc.editMuaddib(p.id, muaddib1, "reject", "Berubah keputusan");
+  expect(u.status).toBe("ditolak_muaddib");
+  expect(u.alasanPenolakan).toBe("Berubah keputusan");
+  expect(notifyCalls[0].method).toBe("muaddibRejected");
+});
+
+test("editMuaddib: from ditolak_muaddib, approve -> menunggu_mudir", async () => {
+  const p = makePerizinan({ status: "ditolak_muaddib" });
+  const svc = svcWith([p]);
+  const u = await svc.editMuaddib(p.id, muaddib1, "approve", "Disetujui ulang");
+  expect(u.status).toBe("menunggu_mudir");
+  expect(u.muaddibCatatan).toBe("Disetujui ulang");
+  expect(u.alasanPenolakan).toBeNull();
+  expect(notifyCalls[0].method).toBe("muaddibApproved");
+});
+
+test("editMuaddib: after mudir acted (disetujui) -> ConflictError", async () => {
+  const p = makePerizinan({ status: "disetujui" });
+  const svc = svcWith([p]);
+  await expect(svc.editMuaddib(p.id, muaddib1, "reject", "x")).rejects.toThrow(ConflictError);
+});
+
+test("editMuaddib: other kamar -> ForbiddenError", async () => {
+  const p = makePerizinan({ status: "menunggu_mudir" });
+  const svc = svcWith([p]);
+  await expect(svc.editMuaddib(p.id, muaddib2, "approve")).rejects.toThrow(ForbiddenError);
+});
+
+test("editMudir: from disetujui, reject -> ditolak_mudir, notifies", async () => {
+  const p = makePerizinan({ status: "disetujui" });
+  const svc = svcWith([p]);
+  const u = await svc.editMudir(p.id, mudir, "reject", "Dibatalkan");
+  expect(u.status).toBe("ditolak_mudir");
+  expect(u.alasanPenolakan).toBe("Dibatalkan");
+  expect(notifyCalls[0].method).toBe("mudirRejected");
+});
+
+test("editMudir: after santri departed (berangkat) -> ConflictError", async () => {
+  const p = makePerizinan({ status: "berangkat" });
+  const svc = svcWith([p]);
+  await expect(svc.editMudir(p.id, mudir, "reject", "x")).rejects.toThrow(ConflictError);
 });

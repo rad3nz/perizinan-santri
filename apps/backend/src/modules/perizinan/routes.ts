@@ -97,12 +97,11 @@ export const perizinanRoutes = new Elysia({ prefix: "/api/perizinan" })
   )
   .delete(
     "/:id",
-    async ({ params }) => {
-      if (!(await perizinanRepo.findById(params.id))) throw new NotFoundError();
-      await perizinanRepo.delete(params.id);
+    async ({ user, params }) => {
+      await service.remove(params.id, user);
       return envelope.ok(null, "Perizinan berhasil dihapus.");
     },
-    { auth: ["admin"], params: idParam },
+    { auth: ["santri", "admin"], params: idParam },
   )
   .patch(
     "/:id/approve-muaddib",
@@ -122,6 +121,40 @@ export const perizinanRoutes = new Elysia({ prefix: "/api/perizinan" })
       auth: ["muaddib"],
       params: idParam,
       body: t.Object({ alasanPenolakan: t.String({ minLength: 1 }) }),
+    },
+  )
+  .patch(
+    "/:id/edit-muaddib",
+    async ({ user, params, body }) => {
+      const note = body.decision === "reject" ? body.alasanPenolakan : body.catatan;
+      await service.editMuaddib(params.id, user, body.decision, note);
+      return envelope.ok(await dtoById(params.id), "Persetujuan diperbarui.");
+    },
+    {
+      auth: ["muaddib"],
+      params: idParam,
+      body: t.Object({
+        decision: t.Union([t.Literal("approve"), t.Literal("reject")]),
+        catatan: t.Optional(t.String()),
+        alasanPenolakan: t.Optional(t.String()),
+      }),
+    },
+  )
+  .patch(
+    "/:id/edit-mudir",
+    async ({ user, params, body }) => {
+      const note = body.decision === "reject" ? body.alasanPenolakan : body.catatan;
+      await service.editMudir(params.id, user, body.decision, note);
+      return envelope.ok(await dtoById(params.id), "Persetujuan diperbarui.");
+    },
+    {
+      auth: ["mudir"],
+      params: idParam,
+      body: t.Object({
+        decision: t.Union([t.Literal("approve"), t.Literal("reject")]),
+        catatan: t.Optional(t.String()),
+        alasanPenolakan: t.Optional(t.String()),
+      }),
     },
   )
   .patch(

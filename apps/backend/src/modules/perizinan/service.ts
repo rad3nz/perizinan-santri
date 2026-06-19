@@ -1,6 +1,6 @@
-import type { JenisIzin } from "@perizinan/shared";
+import type { JenisIzin, PerizinanStatus } from "@perizinan/shared";
 import type { perizinan } from "../../db/schema";
-import { NotFoundError, ValidationError } from "../../lib/errors";
+import { ConflictError, NotFoundError, ValidationError } from "../../lib/errors";
 import {
   type Actor,
   assertOwner,
@@ -11,6 +11,12 @@ import {
 
 export type PerizinanRow = typeof perizinan.$inferSelect;
 type NewPerizinan = typeof perizinan.$inferInsert;
+
+export type Decision = "approve" | "reject";
+
+// An approver may revise their decision only until the next step acts.
+const MUADDIB_EDITABLE: PerizinanStatus[] = ["menunggu_mudir", "ditolak_muaddib"];
+const MUDIR_EDITABLE: PerizinanStatus[] = ["disetujui", "ditolak_mudir"];
 
 export type SubmitInput = {
   jenisIzin: JenisIzin;
@@ -24,6 +30,7 @@ export interface PerizinanRepoPort {
   findById(id: number): Promise<PerizinanRow | undefined>;
   create(values: NewPerizinan): Promise<PerizinanRow>;
   update(id: number, patch: Partial<PerizinanRow>): Promise<PerizinanRow>;
+  delete(id: number): Promise<unknown>;
 }
 
 export interface UsersPort {
@@ -103,6 +110,15 @@ export class PerizinanService {
     });
   }
 
+  async remove(id: number, actor: Actor): Promise<void> {
+    const p = await this.load(id);
+    if (actor.role !== "admin") {
+      assertOwner(actor, p);
+      assertTransition(p, "menunggu_muaddib");
+    }
+    await this.repo.delete(id);
+  }
+
   async approveMuaddib(id: number, actor: Actor, catatan?: string): Promise<PerizinanRow> {
     const p = await this.load(id);
     const owner = await this.owner(p);
@@ -131,6 +147,73 @@ export class PerizinanService {
       alasanPenolakan,
     });
     await this.notify.muaddibRejected(updated, owner);
+    return updated;
+  }
+
+  async editMuaddib(
+    id: number,
+    actor: Actor,
+    decision: Decision,
+    note?: string,
+  ): Promise<PerizinanRow> {
+    const p = await this.load(id);
+    const owner = await this.owner(p);
+    if (!MUADDIB_EDITABLE.includes(p.status)) {
+      throw new ConflictError("Persetujuan tidak dapat diubah pada tahap ini.");
+    }
+    assertSameKamar(actor, owner.kamarId);
+    if (decision === "approve") {
+      const updated = await this.repo.update(id, {
+        status: "menunggu_mudir",
+        muaddibId: actor.id,
+        muaddibAt: new Date(),
+        muaddibCatatan: note ?? null,
+        alasanPenolakan: null,
+      });
+      await this.notify.muaddibApproved(updated, owner);
+      return updated;
+    }
+    requireAlasan(note);
+    const updated = await this.repo.update(id, {
+      status: "ditolak_muaddib",
+      muaddibId: actor.id,
+      muaddibAt: new Date(),
+      alasanPenolakan: note,
+    });
+    await this.notify.muaddibRejected(updated, owner);
+    return updated;
+  }
+
+  async editMudir(
+    id: number,
+    actor: Actor,
+    decision: Decision,
+    note?: string,
+  ): Promise<PerizinanRow> {
+    const p = await this.load(id);
+    const owner = await this.owner(p);
+    if (!MUDIR_EDITABLE.includes(p.status)) {
+      throw new ConflictError("Persetujuan tidak dapat diubah pada tahap ini.");
+    }
+    if (decision === "approve") {
+      const updated = await this.repo.update(id, {
+        status: "disetujui",
+        mudirId: actor.id,
+        mudirAt: new Date(),
+        mudirCatatan: note ?? null,
+        alasanPenolakan: null,
+      });
+      await this.notify.mudirApproved(updated, owner);
+      return updated;
+    }
+    requireAlasan(note);
+    const updated = await this.repo.update(id, {
+      status: "ditolak_mudir",
+      mudirId: actor.id,
+      mudirAt: new Date(),
+      alasanPenolakan: note,
+    });
+    await this.notify.mudirRejected(updated, owner);
     return updated;
   }
 
