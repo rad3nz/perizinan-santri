@@ -5,6 +5,11 @@ type ListParams = NonNullable<Parameters<typeof api.api.perizinan.get>[0]>["quer
 type WriteBody = Parameters<typeof api.api.perizinan.post>[0];
 type ApproveBody = { catatan?: string };
 type RejectBody = { alasanPenolakan: string };
+type EditDecisionBody = {
+  decision: "approve" | "reject";
+  catatan?: string;
+  alasanPenolakan?: string;
+};
 
 const invalidates = ["perizinan", "dashboard"] as const;
 
@@ -92,6 +97,22 @@ export function useApproveMudir(id: number) {
 export function useRejectMudir(id: number) {
   return useInvalidatingMutation(async (body: RejectBody) => {
     const { data, error } = await api.api.perizinan({ id })["reject-mudir"].patch(body);
+    if (error) throw error;
+    return data;
+  });
+}
+
+export function useEditMuaddib(id: number) {
+  return useInvalidatingMutation(async (body: EditDecisionBody) => {
+    const { data, error } = await api.api.perizinan({ id })["edit-muaddib"].patch(body);
+    if (error) throw error;
+    return data;
+  });
+}
+
+export function useEditMudir(id: number) {
+  return useInvalidatingMutation(async (body: EditDecisionBody) => {
+    const { data, error } = await api.api.perizinan({ id })["edit-mudir"].patch(body);
     if (error) throw error;
     return data;
   });

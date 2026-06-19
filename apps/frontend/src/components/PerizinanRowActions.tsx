@@ -1,18 +1,26 @@
 import { Box, Button, Menu } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { TRANSITIONS } from "@perizinan/shared";
-import { Check, ChevronDown, X } from "lucide-react";
+import { type PerizinanStatus, TRANSITIONS } from "@perizinan/shared";
+import { Check, ChevronDown, Pencil, Trash2, X } from "lucide-react";
 import { type MouseEvent, useState } from "react";
 import {
   useApproveMuaddib,
   useApproveMudir,
+  useDeletePerizinan,
+  useEditMuaddib,
+  useEditMudir,
   useRejectMuaddib,
   useRejectMudir,
 } from "../api/hooks/usePerizinan";
 import type { Perizinan } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { ApproveModal } from "./ApproveModal";
+import { ConfirmModal } from "./ConfirmModal";
+import { EditPerizinanModal } from "./EditPerizinanModal";
 import { RejectModal } from "./RejectModal";
+
+const MUADDIB_EDITABLE: PerizinanStatus[] = ["menunggu_mudir", "ditolak_muaddib"];
+const MUDIR_EDITABLE: PerizinanStatus[] = ["disetujui", "ditolak_mudir"];
 
 function errorMessage(error: unknown): string {
   if (error && typeof error === "object" && "value" in error) {
@@ -22,29 +30,114 @@ function errorMessage(error: unknown): string {
   return "Terjadi kesalahan.";
 }
 
+type Mode = "act" | "edit" | null;
+
 export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
   const { user } = useAuth();
   const id = perizinan.id;
   const status = perizinan.status;
+  const role = user?.role;
+
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const approveMuaddib = useApproveMuaddib(id);
   const rejectMuaddib = useRejectMuaddib(id);
   const approveMudir = useApproveMudir(id);
   const rejectMudir = useRejectMudir(id);
+  const editMuaddib = useEditMuaddib(id);
+  const editMudir = useEditMudir(id);
+  const del = useDeletePerizinan();
 
   const notifyError = (error: unknown) =>
     notifications.show({ color: "red", message: errorMessage(error) });
   const notifyOk = (message: string) => notifications.show({ color: "brand", message });
 
-  const role = user?.role;
-  const canMuaddib = role === "muaddib" && status === TRANSITIONS["approve-muaddib"].from;
-  const canMudir = role === "mudir" && status === TRANSITIONS["approve-mudir"].from;
-  if (!canMuaddib && !canMudir) return null;
+  const isOwner = perizinan.santri.id === user?.id;
+  const canEdit = role === "santri" && isOwner && status === "menunggu_muaddib";
+  const canDelete =
+    (role === "santri" && isOwner && status === "menunggu_muaddib") || role === "admin";
 
-  const approve = canMuaddib ? approveMuaddib : approveMudir;
-  const reject = canMuaddib ? rejectMuaddib : rejectMudir;
+  const muaddibMode: Mode =
+    role === "muaddib"
+      ? status === TRANSITIONS["approve-muaddib"].from
+        ? "act"
+        : MUADDIB_EDITABLE.includes(status) && perizinan.santri.kamar?.id === user?.kamarId
+          ? "edit"
+          : null
+      : null;
+  const mudirMode: Mode =
+    role === "mudir"
+      ? status === TRANSITIONS["approve-mudir"].from
+        ? "act"
+        : MUDIR_EDITABLE.includes(status)
+          ? "edit"
+          : null
+      : null;
+  const showApproval = muaddibMode !== null || mudirMode !== null;
+
+  if (!canEdit && !canDelete && !showApproval) return null;
+
+  const doApprove = (catatan?: string) => {
+    const ok = (msg: string) => () => {
+      setApproveOpen(false);
+      notifyOk(msg);
+    };
+    if (muaddibMode === "act")
+      approveMuaddib.mutate(
+        { catatan },
+        { onSuccess: ok("Perizinan disetujui."), onError: notifyError },
+      );
+    else if (muaddibMode === "edit")
+      editMuaddib.mutate(
+        { decision: "approve", catatan },
+        { onSuccess: ok("Persetujuan diperbarui."), onError: notifyError },
+      );
+    else if (mudirMode === "act")
+      approveMudir.mutate(
+        { catatan },
+        { onSuccess: ok("Perizinan disetujui."), onError: notifyError },
+      );
+    else if (mudirMode === "edit")
+      editMudir.mutate(
+        { decision: "approve", catatan },
+        { onSuccess: ok("Persetujuan diperbarui."), onError: notifyError },
+      );
+  };
+
+  const doReject = (alasanPenolakan: string) => {
+    const ok = () => {
+      setRejectOpen(false);
+      notifyOk("Perizinan ditolak.");
+    };
+    if (muaddibMode === "act")
+      rejectMuaddib.mutate({ alasanPenolakan }, { onSuccess: ok, onError: notifyError });
+    else if (muaddibMode === "edit")
+      editMuaddib.mutate(
+        { decision: "reject", alasanPenolakan },
+        { onSuccess: ok, onError: notifyError },
+      );
+    else if (mudirMode === "act")
+      rejectMudir.mutate({ alasanPenolakan }, { onSuccess: ok, onError: notifyError });
+    else if (mudirMode === "edit")
+      editMudir.mutate(
+        { decision: "reject", alasanPenolakan },
+        { onSuccess: ok, onError: notifyError },
+      );
+  };
+
+  const approveLoading =
+    approveMuaddib.isPending ||
+    approveMudir.isPending ||
+    editMuaddib.isPending ||
+    editMudir.isPending;
+  const rejectLoading =
+    rejectMuaddib.isPending ||
+    rejectMudir.isPending ||
+    editMuaddib.isPending ||
+    editMudir.isPending;
 
   const stop = (e: MouseEvent) => e.stopPropagation();
 
@@ -61,56 +154,87 @@ export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          <Menu.Item
-            color="green"
-            leftSection={<Check size={16} strokeWidth={1.75} />}
-            onClick={() => setApproveOpen(true)}
-          >
-            Setujui
-          </Menu.Item>
-          <Menu.Item
-            color="red"
-            leftSection={<X size={16} strokeWidth={1.75} />}
-            onClick={() => setRejectOpen(true)}
-          >
-            Tolak
-          </Menu.Item>
+          {showApproval ? (
+            <>
+              <Menu.Item
+                color="green"
+                leftSection={<Check size={16} strokeWidth={1.75} />}
+                onClick={() => setApproveOpen(true)}
+              >
+                Setujui
+              </Menu.Item>
+              <Menu.Item
+                color="red"
+                leftSection={<X size={16} strokeWidth={1.75} />}
+                onClick={() => setRejectOpen(true)}
+              >
+                Tolak
+              </Menu.Item>
+            </>
+          ) : null}
+          {canEdit ? (
+            <Menu.Item
+              leftSection={<Pencil size={16} strokeWidth={1.75} />}
+              onClick={() => setEditOpen(true)}
+            >
+              Edit
+            </Menu.Item>
+          ) : null}
+          {canDelete ? (
+            <Menu.Item
+              color="red"
+              leftSection={<Trash2 size={16} strokeWidth={1.75} />}
+              onClick={() => setDeleteOpen(true)}
+            >
+              Hapus
+            </Menu.Item>
+          ) : null}
         </Menu.Dropdown>
       </Menu>
-      <ApproveModal
-        opened={approveOpen}
-        onClose={() => setApproveOpen(false)}
-        loading={approve.isPending}
-        onSubmit={(catatan) =>
-          approve.mutate(
-            { catatan },
-            {
+
+      {showApproval ? (
+        <>
+          <ApproveModal
+            opened={approveOpen}
+            onClose={() => setApproveOpen(false)}
+            loading={approveLoading}
+            onSubmit={doApprove}
+          />
+          <RejectModal
+            opened={rejectOpen}
+            onClose={() => setRejectOpen(false)}
+            loading={rejectLoading}
+            onSubmit={doReject}
+          />
+        </>
+      ) : null}
+      {canEdit ? (
+        <EditPerizinanModal
+          perizinan={perizinan}
+          opened={editOpen}
+          onClose={() => setEditOpen(false)}
+        />
+      ) : null}
+      {canDelete ? (
+        <ConfirmModal
+          opened={deleteOpen}
+          onClose={() => setDeleteOpen(false)}
+          loading={del.isPending}
+          title="Hapus Perizinan"
+          message="Yakin ingin menghapus perizinan ini? Tindakan ini tidak dapat dibatalkan."
+          confirmLabel="Hapus"
+          confirmColor="red"
+          onConfirm={() =>
+            del.mutate(id, {
               onSuccess: () => {
-                setApproveOpen(false);
-                notifyOk("Perizinan disetujui.");
+                setDeleteOpen(false);
+                notifyOk("Perizinan dihapus.");
               },
               onError: notifyError,
-            },
-          )
-        }
-      />
-      <RejectModal
-        opened={rejectOpen}
-        onClose={() => setRejectOpen(false)}
-        loading={reject.isPending}
-        onSubmit={(alasanPenolakan) =>
-          reject.mutate(
-            { alasanPenolakan },
-            {
-              onSuccess: () => {
-                setRejectOpen(false);
-                notifyOk("Perizinan ditolak.");
-              },
-              onError: notifyError,
-            },
-          )
-        }
-      />
+            })
+          }
+        />
+      ) : null}
     </Box>
   );
 }
