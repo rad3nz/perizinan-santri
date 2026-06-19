@@ -19,7 +19,7 @@ export function StatCard({
           <Text size="sm" c="dimmed">
             {label}
           </Text>
-          <Title order={2} c={color}>
+          <Title order={2} c={color ? `${color}.8` : undefined}>
             {value}
           </Title>
         </Stack>

@@ -43,6 +43,8 @@ export const theme = createTheme({
   primaryColor: "brand",
   primaryShade: 6,
   colors: { brand, navy, gold },
+  autoContrast: true,
+  luminanceThreshold: 0.45,
   defaultRadius: "md",
   fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
   headings: { fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, sans-serif" },
