@@ -1,30 +1,32 @@
 import { Button, Paper, Stack } from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { usePerizinanList } from "../../api/hooks/usePerizinan";
 import type { Perizinan } from "../../api/types";
-import { ApprovalProgress } from "../../components/ApprovalProgress";
+import { ApprovalLevelIcon } from "../../components/ApprovalProgress";
 import { type Column, DataTable } from "../../components/DataTable";
+import { MonthYearFilter } from "../../components/MonthYearFilter";
 import { PageHeader } from "../../components/PageHeader";
 import { StatusBadge } from "../../components/StatusBadge";
 import { formatTanggal } from "../../lib/format";
-import { jenisIzinLabel } from "../../lib/labels";
+import { approvalState, jenisIzinLabel } from "../../lib/labels";
+import { currentPeriod, monthRange } from "../../lib/period";
 
 export function RiwayatPerizinan() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const [range, setRange] = useState<[string | null, string | null]>([null, null]);
-  const query = usePerizinanList({
-    page,
-    dateFrom: range[0] ?? undefined,
-    dateTo: range[1] ?? undefined,
-  });
+  const [period, setPeriod] = useState<{ month: string | null; year: string }>(currentPeriod);
+  const { dateFrom, dateTo } = monthRange(period.year, period.month);
+  const query = usePerizinanList({ page, dateFrom, dateTo });
   const payload = query.data?.data;
 
-  const onRangeChange = (value: [string | null, string | null]) => {
-    setRange(value);
+  const setMonth = (month: string | null) => {
+    setPeriod((p) => ({ ...p, month }));
+    setPage(1);
+  };
+  const setYear = (year: string) => {
+    setPeriod((p) => ({ ...p, year }));
     setPage(1);
   };
 
@@ -32,7 +34,14 @@ export function RiwayatPerizinan() {
     { header: "Jenis", render: (r) => jenisIzinLabel(r.jenisIzin) },
     { header: "Tujuan", render: (r) => r.tujuan },
     { header: "Keluar", render: (r) => formatTanggal(r.tanggalKeluar) },
-    { header: "Persetujuan", render: (r) => <ApprovalProgress status={r.status} /> },
+    {
+      header: "Muaddib",
+      render: (r) => <ApprovalLevelIcon level={approvalState(r.status).muaddib} who="Muaddib" />,
+    },
+    {
+      header: "Mudir",
+      render: (r) => <ApprovalLevelIcon level={approvalState(r.status).mudir} who="Mudir" />,
+    },
     { header: "Status", render: (r) => <StatusBadge status={r.status} /> },
   ];
 
@@ -54,14 +63,11 @@ export function RiwayatPerizinan() {
       />
       <Paper withBorder radius="md" p="md">
         <Stack>
-          <DatePickerInput
-            type="range"
-            clearable
-            valueFormat="DD MMM YYYY"
-            placeholder="Rentang tanggal keluar"
-            value={range}
-            onChange={onRangeChange}
-            maw={320}
+          <MonthYearFilter
+            month={period.month}
+            year={period.year}
+            onMonth={setMonth}
+            onYear={setYear}
           />
           <DataTable
             columns={columns}
