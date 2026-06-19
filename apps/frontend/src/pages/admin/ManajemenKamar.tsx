@@ -1,6 +1,7 @@
-import { Button, Group, Modal, NumberInput, Stack, TextInput, Title } from "@mantine/core";
+import { Button, Group, Modal, NumberInput, Paper, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import {
   useCreateKamar,
@@ -10,6 +11,7 @@ import {
 } from "../../api/hooks/useKamar";
 import type { Kamar } from "../../api/types";
 import { type Column, DataTable } from "../../components/DataTable";
+import { PageHeader } from "../../components/PageHeader";
 import { serverErrors, serverMessage } from "../../lib/api-error";
 
 interface KamarFormValues {
@@ -100,10 +102,21 @@ export function ManajemenKamar() {
       header: "Aksi",
       render: (r) => (
         <Group gap="xs">
-          <Button size="xs" variant="light" onClick={() => openEdit(r)}>
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<Pencil size={14} strokeWidth={1.75} />}
+            onClick={() => openEdit(r)}
+          >
             Edit
           </Button>
-          <Button size="xs" color="red" variant="light" onClick={() => remove(r)}>
+          <Button
+            size="xs"
+            color="red"
+            variant="light"
+            leftSection={<Trash2 size={14} strokeWidth={1.75} />}
+            onClick={() => remove(r)}
+          >
             Hapus
           </Button>
         </Group>
@@ -113,18 +126,27 @@ export function ManajemenKamar() {
 
   return (
     <Stack>
-      <Group justify="space-between">
-        <Title order={2}>Manajemen Kamar</Title>
-        <Button color="brand" onClick={openAdd}>
-          Tambah Kamar
-        </Button>
-      </Group>
-      <DataTable
-        columns={columns}
-        rows={query.data?.data.items ?? []}
-        rowKey={(r) => r.id}
-        loading={query.isLoading}
+      <PageHeader
+        title="Manajemen Kamar"
+        description="Kelola daftar kamar dan kapasitasnya."
+        actions={
+          <Button
+            color="brand"
+            leftSection={<Plus size={16} strokeWidth={1.75} />}
+            onClick={openAdd}
+          >
+            Tambah Kamar
+          </Button>
+        }
       />
+      <Paper withBorder radius="md" p="md">
+        <DataTable
+          columns={columns}
+          rows={query.data?.data.items ?? []}
+          rowKey={(r) => r.id}
+          loading={query.isLoading}
+        />
+      </Paper>
       <KamarFormModal
         key={`${opened}-${target?.id ?? "new"}`}
         kamar={target}

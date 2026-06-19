@@ -2,15 +2,16 @@ import {
   Button,
   Group,
   Modal,
+  Paper,
   PasswordInput,
   Select,
   Stack,
   TextInput,
-  Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { ROLES, type Role } from "@perizinan/shared";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useKamarList } from "../../api/hooks/useKamar";
 import {
@@ -21,6 +22,7 @@ import {
 } from "../../api/hooks/useUsers";
 import type { AppUser } from "../../api/types";
 import { type Column, DataTable } from "../../components/DataTable";
+import { PageHeader } from "../../components/PageHeader";
 import { serverErrors, serverMessage } from "../../lib/api-error";
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -187,6 +189,7 @@ export function ManajemenPengguna() {
           <Button
             size="xs"
             variant="light"
+            leftSection={<Pencil size={14} strokeWidth={1.75} />}
             onClick={() => {
               setTarget(r);
               setOpened(true);
@@ -194,7 +197,13 @@ export function ManajemenPengguna() {
           >
             Edit
           </Button>
-          <Button size="xs" color="red" variant="light" onClick={() => remove(r)}>
+          <Button
+            size="xs"
+            color="red"
+            variant="light"
+            leftSection={<Trash2 size={14} strokeWidth={1.75} />}
+            onClick={() => remove(r)}
+          >
             Hapus
           </Button>
         </Group>
@@ -204,24 +213,30 @@ export function ManajemenPengguna() {
 
   return (
     <Stack>
-      <Group justify="space-between">
-        <Title order={2}>Manajemen Pengguna</Title>
-        <Button
-          color="brand"
-          onClick={() => {
-            setTarget(null);
-            setOpened(true);
-          }}
-        >
-          Tambah Pengguna
-        </Button>
-      </Group>
-      <DataTable
-        columns={columns}
-        rows={query.data?.data.items ?? []}
-        rowKey={(r) => r.id}
-        loading={query.isLoading}
+      <PageHeader
+        title="Manajemen Pengguna"
+        description="Kelola akun santri, muaddib, mudir, dan admin."
+        actions={
+          <Button
+            color="brand"
+            leftSection={<Plus size={16} strokeWidth={1.75} />}
+            onClick={() => {
+              setTarget(null);
+              setOpened(true);
+            }}
+          >
+            Tambah Pengguna
+          </Button>
+        }
       />
+      <Paper withBorder radius="md" p="md">
+        <DataTable
+          columns={columns}
+          rows={query.data?.data.items ?? []}
+          rowKey={(r) => r.id}
+          loading={query.isLoading}
+        />
+      </Paper>
       <UserFormModal
         key={`${opened}-${target?.id ?? "new"}`}
         pengguna={target}

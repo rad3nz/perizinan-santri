@@ -1,6 +1,7 @@
 import { Button, Card, Group, PasswordInput, Stack, Text, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
+import { KeyRound } from "lucide-react";
 import { useState } from "react";
 import { api } from "../api/client";
 import { useAuth } from "../auth/useAuth";
@@ -94,7 +95,12 @@ export function ProfilePage() {
               required
               {...form.getInputProps("konfirmasi")}
             />
-            <Button type="submit" color="brand" loading={loading}>
+            <Button
+              type="submit"
+              color="brand"
+              loading={loading}
+              leftSection={<KeyRound size={16} strokeWidth={1.75} />}
+            >
               Simpan
             </Button>
           </Stack>

@@ -1,4 +1,5 @@
 import { Center, Loader, SimpleGrid, Stack, Title } from "@mantine/core";
+import { CheckCircle2, Clock, LogIn, LogOut, UserCheck, Users } from "lucide-react";
 import { useDashboardStats } from "../api/hooks/useDashboard";
 import type { StaffStats } from "../api/types";
 import { StatCard } from "../components/StatCard";
@@ -19,12 +20,22 @@ export function StaffDashboard({ title = "Dashboard" }: { title?: string }) {
     <Stack>
       <Title order={2}>{title}</Title>
       <SimpleGrid cols={{ base: 2, sm: 3 }}>
-        <StatCard label="Total Santri" value={stats.totalSantri} />
-        <StatCard label="Menunggu Muaddib" value={stats.menungguMuaddib} color="yellow" />
-        <StatCard label="Menunggu Mudir" value={stats.menungguMudir} color="yellow" />
-        <StatCard label="Disetujui" value={stats.disetujui} color="green" />
-        <StatCard label="Berangkat" value={stats.berangkat} color="blue" />
-        <StatCard label="Kembali Hari Ini" value={stats.kembaliHariIni} color="gray" />
+        <StatCard label="Total Santri" value={stats.totalSantri} icon={Users} />
+        <StatCard
+          label="Menunggu Muaddib"
+          value={stats.menungguMuaddib}
+          color="yellow"
+          icon={Clock}
+        />
+        <StatCard
+          label="Menunggu Mudir"
+          value={stats.menungguMudir}
+          color="yellow"
+          icon={UserCheck}
+        />
+        <StatCard label="Disetujui" value={stats.disetujui} color="green" icon={CheckCircle2} />
+        <StatCard label="Berangkat" value={stats.berangkat} color="blue" icon={LogOut} />
+        <StatCard label="Kembali Hari Ini" value={stats.kembaliHariIni} color="gray" icon={LogIn} />
       </SimpleGrid>
     </Stack>
   );

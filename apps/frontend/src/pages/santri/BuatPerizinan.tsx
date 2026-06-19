@@ -3,6 +3,7 @@ import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { JENIS_IZIN, type JenisIzin } from "@perizinan/shared";
+import { Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCreatePerizinan } from "../../api/hooks/usePerizinan";
 import { serverErrors, serverMessage } from "../../lib/api-error";
@@ -91,7 +92,12 @@ export function BuatPerizinan() {
               {...form.getInputProps("tanggalKembaliRencana")}
             />
             <Textarea label="Catatan" rows={3} {...form.getInputProps("catatan")} />
-            <Button type="submit" color="brand" loading={create.isPending}>
+            <Button
+              type="submit"
+              color="brand"
+              loading={create.isPending}
+              leftSection={<Send size={16} strokeWidth={1.75} />}
+            >
               Ajukan
             </Button>
           </Stack>
