@@ -80,8 +80,8 @@ describe("PerizinanRowActions", () => {
   it("muaddib can still edit decision while menunggu_mudir (edit mode)", async () => {
     renderRow(muaddib, "menunggu_mudir");
     await userEvent.click(screen.getByRole("button", { name: /Aksi/ }));
-    expect(await screen.findByText("Setujui")).toBeInTheDocument();
-    expect(screen.getByText("Tolak")).toBeInTheDocument();
+    expect(await screen.findByText("Edit Persetujuan")).toBeInTheDocument();
+    expect(screen.queryByText("Setujui")).not.toBeInTheDocument();
   });
 
   it("muaddib has no actions once mudir acted (disetujui)", () => {
@@ -92,8 +92,8 @@ describe("PerizinanRowActions", () => {
   it("mudir can edit decision while disetujui (edit mode)", async () => {
     renderRow(mudir, "disetujui");
     await userEvent.click(screen.getByRole("button", { name: /Aksi/ }));
-    expect(await screen.findByText("Setujui")).toBeInTheDocument();
-    expect(screen.getByText("Tolak")).toBeInTheDocument();
+    expect(await screen.findByText("Edit Persetujuan")).toBeInTheDocument();
+    expect(screen.queryByText("Setujui")).not.toBeInTheDocument();
   });
 
   it("mudir has no actions after santri departed (berangkat)", () => {

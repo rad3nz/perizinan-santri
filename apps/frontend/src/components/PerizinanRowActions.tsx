@@ -16,6 +16,7 @@ import type { Perizinan } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { ApproveModal } from "./ApproveModal";
 import { ConfirmModal } from "./ConfirmModal";
+import { EditApprovalModal } from "./EditApprovalModal";
 import { EditPerizinanModal } from "./EditPerizinanModal";
 import { RejectModal } from "./RejectModal";
 
@@ -40,6 +41,7 @@ export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
 
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [editApprovalOpen, setEditApprovalOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -76,35 +78,23 @@ export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
           ? "edit"
           : null
       : null;
-  const showApproval = muaddibMode !== null || mudirMode !== null;
+  // Which approver level is active, split by whether this is a first decision (act)
+  // or a revision of an existing one (edit).
+  const actLevel = muaddibMode === "act" ? "muaddib" : mudirMode === "act" ? "mudir" : null;
+  const editLevel = muaddibMode === "edit" ? "muaddib" : mudirMode === "edit" ? "mudir" : null;
+  const showApproval = actLevel !== null || editLevel !== null;
 
   if (!canEdit && !canDelete && !showApproval) return null;
 
   const doApprove = (catatan?: string) => {
-    const ok = (msg: string) => () => {
+    const ok = () => {
       setApproveOpen(false);
-      notifyOk(msg);
+      notifyOk("Perizinan disetujui.");
     };
-    if (muaddibMode === "act")
-      approveMuaddib.mutate(
-        { catatan },
-        { onSuccess: ok("Perizinan disetujui."), onError: notifyError },
-      );
-    else if (muaddibMode === "edit")
-      editMuaddib.mutate(
-        { decision: "approve", catatan },
-        { onSuccess: ok("Persetujuan diperbarui."), onError: notifyError },
-      );
-    else if (mudirMode === "act")
-      approveMudir.mutate(
-        { catatan },
-        { onSuccess: ok("Perizinan disetujui."), onError: notifyError },
-      );
-    else if (mudirMode === "edit")
-      editMudir.mutate(
-        { decision: "approve", catatan },
-        { onSuccess: ok("Persetujuan diperbarui."), onError: notifyError },
-      );
+    if (actLevel === "muaddib")
+      approveMuaddib.mutate({ catatan }, { onSuccess: ok, onError: notifyError });
+    else if (actLevel === "mudir")
+      approveMudir.mutate({ catatan }, { onSuccess: ok, onError: notifyError });
   };
 
   const doReject = (alasanPenolakan: string) => {
@@ -112,32 +102,37 @@ export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
       setRejectOpen(false);
       notifyOk("Perizinan ditolak.");
     };
-    if (muaddibMode === "act")
+    if (actLevel === "muaddib")
       rejectMuaddib.mutate({ alasanPenolakan }, { onSuccess: ok, onError: notifyError });
-    else if (muaddibMode === "edit")
-      editMuaddib.mutate(
-        { decision: "reject", alasanPenolakan },
-        { onSuccess: ok, onError: notifyError },
-      );
-    else if (mudirMode === "act")
+    else if (actLevel === "mudir")
       rejectMudir.mutate({ alasanPenolakan }, { onSuccess: ok, onError: notifyError });
-    else if (mudirMode === "edit")
-      editMudir.mutate(
-        { decision: "reject", alasanPenolakan },
-        { onSuccess: ok, onError: notifyError },
-      );
   };
 
-  const approveLoading =
-    approveMuaddib.isPending ||
-    approveMudir.isPending ||
-    editMuaddib.isPending ||
-    editMudir.isPending;
-  const rejectLoading =
-    rejectMuaddib.isPending ||
-    rejectMudir.isPending ||
-    editMuaddib.isPending ||
-    editMudir.isPending;
+  // The approver's existing decision, derived from status, to pre-fill the edit modal.
+  const currentDecision: "approve" | "reject" = status.startsWith("ditolak") ? "reject" : "approve";
+  const currentNote =
+    currentDecision === "reject"
+      ? perizinan.alasanPenolakan
+      : editLevel === "mudir"
+        ? perizinan.mudirCatatan
+        : perizinan.muaddibCatatan;
+
+  const doEditApproval = (decision: "approve" | "reject", note?: string) => {
+    const edit = editLevel === "mudir" ? editMudir : editMuaddib;
+    const body =
+      decision === "approve" ? { decision, catatan: note } : { decision, alasanPenolakan: note };
+    edit.mutate(body, {
+      onSuccess: () => {
+        setEditApprovalOpen(false);
+        notifyOk("Persetujuan diperbarui.");
+      },
+      onError: notifyError,
+    });
+  };
+
+  const approveLoading = approveMuaddib.isPending || approveMudir.isPending;
+  const rejectLoading = rejectMuaddib.isPending || rejectMudir.isPending;
+  const editApprovalLoading = editMuaddib.isPending || editMudir.isPending;
 
   const stop = (e: MouseEvent) => e.stopPropagation();
 
@@ -154,7 +149,7 @@ export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          {showApproval ? (
+          {actLevel ? (
             <>
               <Menu.Item
                 color="green"
@@ -171,6 +166,14 @@ export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
                 Tolak
               </Menu.Item>
             </>
+          ) : null}
+          {editLevel ? (
+            <Menu.Item
+              leftSection={<Pencil size={16} strokeWidth={1.75} />}
+              onClick={() => setEditApprovalOpen(true)}
+            >
+              Edit Persetujuan
+            </Menu.Item>
           ) : null}
           {canEdit ? (
             <Menu.Item
@@ -192,7 +195,7 @@ export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
         </Menu.Dropdown>
       </Menu>
 
-      {showApproval ? (
+      {actLevel ? (
         <>
           <ApproveModal
             opened={approveOpen}
@@ -207,6 +210,16 @@ export function PerizinanRowActions({ perizinan }: { perizinan: Perizinan }) {
             onSubmit={doReject}
           />
         </>
+      ) : null}
+      {editLevel ? (
+        <EditApprovalModal
+          opened={editApprovalOpen}
+          onClose={() => setEditApprovalOpen(false)}
+          loading={editApprovalLoading}
+          initialDecision={currentDecision}
+          initialNote={currentNote}
+          onSubmit={doEditApproval}
+        />
       ) : null}
       {canEdit ? (
         <EditPerizinanModal
