@@ -1,5 +1,4 @@
 import { Group, Paper, Select, Stack } from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
 import {
   JENIS_IZIN,
   type JenisIzin,
@@ -13,7 +12,9 @@ import { usePerizinanList } from "../api/hooks/usePerizinan";
 import type { Perizinan } from "../api/types";
 import { formatTanggal } from "../lib/format";
 import { jenisIzinLabel, statusLabel } from "../lib/labels";
+import { currentPeriod, monthRange } from "../lib/period";
 import { type Column, DataTable } from "./DataTable";
+import { MonthYearFilter } from "./MonthYearFilter";
 import { PageHeader } from "./PageHeader";
 import { PerizinanRowActions } from "./PerizinanRowActions";
 import { StatusBadge } from "./StatusBadge";
@@ -24,6 +25,7 @@ interface PerizinanListViewProps {
   showKamarFilter?: boolean;
   showJenisFilter?: boolean;
   showActions?: boolean;
+  showKamar?: boolean;
 }
 
 export function PerizinanListView({
@@ -32,30 +34,35 @@ export function PerizinanListView({
   showKamarFilter,
   showJenisFilter,
   showActions,
+  showKamar,
 }: PerizinanListViewProps) {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string | null>(null);
   const [kamarId, setKamarId] = useState<string | null>(null);
   const [jenisIzin, setJenisIzin] = useState<string | null>(null);
-  const [range, setRange] = useState<[string | null, string | null]>([null, null]);
+  const [period, setPeriod] = useState<{ month: string | null; year: string }>(currentPeriod);
 
   const kamarQuery = useKamarList();
   const kamarOptions =
     kamarQuery.data?.data.items.map((k) => ({ value: String(k.id), label: k.nama })) ?? [];
 
+  const { dateFrom, dateTo } = monthRange(period.year, period.month);
   const query = usePerizinanList({
     page,
     status: (status as PerizinanStatus | null) ?? undefined,
     kamarId: kamarId ? Number(kamarId) : undefined,
     jenisIzin: (jenisIzin as JenisIzin | null) ?? undefined,
-    dateFrom: range[0] ?? undefined,
-    dateTo: range[1] ?? undefined,
+    dateFrom,
+    dateTo,
   });
   const payload = query.data?.data;
 
   const columns: Column<Perizinan>[] = [
     { header: "Santri", render: (r) => r.santri.name },
+    ...(showKamar
+      ? [{ header: "Kamar", render: (r: Perizinan) => r.santri.kamar?.nama ?? "-" }]
+      : []),
     { header: "Jenis", render: (r) => jenisIzinLabel(r.jenisIzin) },
     { header: "Tujuan", render: (r) => r.tujuan },
     { header: "Keluar", render: (r) => formatTanggal(r.tanggalKeluar) },
@@ -72,6 +79,14 @@ export function PerizinanListView({
       setter(value);
       setPage(1);
     };
+  const setMonth = (month: string | null) => {
+    setPeriod((p) => ({ ...p, month }));
+    setPage(1);
+  };
+  const setYear = (year: string) => {
+    setPeriod((p) => ({ ...p, year }));
+    setPage(1);
+  };
 
   return (
     <Stack>
@@ -86,13 +101,11 @@ export function PerizinanListView({
               value={status}
               onChange={resetPage(setStatus)}
             />
-            <DatePickerInput
-              type="range"
-              clearable
-              valueFormat="DD MMM YYYY"
-              placeholder="Rentang tanggal keluar"
-              value={range}
-              onChange={resetPage(setRange)}
+            <MonthYearFilter
+              month={period.month}
+              year={period.year}
+              onMonth={setMonth}
+              onYear={setYear}
             />
             {showKamarFilter ? (
               <Select

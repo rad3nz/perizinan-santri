@@ -68,6 +68,7 @@ export const router = createBrowserRouter([
                     title="Daftar Perizinan"
                     basePath="/mudir/perizinan"
                     showActions
+                    showKamar
                   />
                 ),
               },
@@ -88,6 +89,7 @@ export const router = createBrowserRouter([
                     basePath="/admin/perizinan"
                     showKamarFilter
                     showJenisFilter
+                    showKamar
                   />
                 ),
               },
